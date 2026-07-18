@@ -1,0 +1,6 @@
+{
+  "name": "FALLA Language Learning",
+  "description": "Módulo principal de aprendizado de idiomas com lições interativas, gamificação, central de personagens, painel administrativo e manual completo de arquitetura para publicação iOS/Android.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
