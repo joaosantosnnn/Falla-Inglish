@@ -1,20 +1,22 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+﻿# FALLA - Language Learning
 
-# Run and deploy your AI Studio app
+Aplicativo de aprendizado de idiomas com licoes interativas, gamificacao, tutor de IA, mascotes e painel administrativo. Disponivel como aplicativo web e app Android/iOS.
 
-This contains everything you need to run your app locally.
+## Executar localmente
 
-View your app in AI Studio: https://ai.studio/apps/3aa058ae-19fe-45c5-be88-c51da36821f5
+**Pre-requisitos:** Node.js
 
-## Run Locally
+1. Instale as dependencias:
+   npm install
+2. Configure as variaveis de ambiente no arquivo .env
+3. Execute o aplicativo:
+   npm run dev
 
-**Prerequisites:**  Node.js
+## Build para producao
 
+npm run build
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+## Build para Android
+
+npm run cap:sync
+npm run cap:open-android
