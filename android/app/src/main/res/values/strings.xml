@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FALLA</string>
+    <string name="title_activity_main">FALLA</string>
+    <string name="package_name">com.falla.app</string>
+    <string name="custom_url_scheme">com.falla.app</string>
+</resources>

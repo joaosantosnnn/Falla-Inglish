@@ -1,0 +1,66 @@
+
+Navegação
+cd C:\Users\joaos\Downloads\Falla
+Sempre rode isso primeiro, antes de qualquer outro comando — é a pasta raiz do projeto.
+
+
+🔧 Instalar/atualizar dependências
+
+npm install
+Rode sempre que baixar um zip novo do AI Studio ou o package.json mudar.
+
+
+💻 Rodar localmente no navegador do PC (mais rápido pra testar)
+npm run dev
+
+Abre em http://localhost:3000 (ou porta similar). Ótimo para testar rápido sem precisar de Android Studio.
+
+
+🏗️ Build para produção (gera os arquivos finais)
+npm run build
+
+
+📱 Sincronizar com o Android
+npm run cap:sync
+
+🤖 Abrir no Android Studio
+npm run cap:open-android
+
+
+📤 Enviar mudanças pro GitHub (dispara build automático do APK)
+git add .
+git commit -m "Descreva a mudança aqui"
+git push
+
+🔍 Ver conteúdo do arquivo .env (conferir se as chaves estão lá)
+type .env
+
+
+🔄 Recriar o .env do zero (se ele sumir ou for perdido em algum zip novo)
+@"
+VITE_SUPABASE_URL=https://drfhfwrzkjgbcqlodvby.supabase.co
+VITE_SUPABASE_ANON_KEY=sb_publishable_wjP0cAwP_VplyMC1jZTo6Q_BiQ-jl4n
+"@ | Out-File -FilePath .env -Encoding utf8 -NoNewline
+
+📦 Extrair um zip novo por cima do projeto (mantendo .env e node_modules)
+cd C:\Users\joaos\Downloads
+Expand-Archive -Path .\NOME-DO-ZIP.zip -DestinationPath .\Falla -Force
+
+
+🔗 Links importantes pra guardar
+
+GitHub do projeto: github.com/joaosantosnnn/Falla-Inglish
+Ações/Actions (acompanhar build do APK): github.com/joaosantosnnn/Falla-Inglish/actions
+Supabase (banco de dados): supabase.com/dashboard/project/drfhfwrzkjgbcqlodvby
+
+
+🔁 Fluxo padrão sempre que fizer uma mudança no AI Studio:
+
+Baixar zip novo do AI Studio
+Expand-Archive por cima da pasta Falla
+Conferir .env com type .env
+npm install
+npm run dev (testar local antes de subir)
+Se estiver ok: git add . → git commit -m "..." → git push
+Acompanhar o build automático na aba "Ações" do GitHub
+Baixar o .apk gerado e instalar no celular
