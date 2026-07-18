@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import chicoMascot from './assets/images/chico_mascot.jpg';
 import { Course, Lesson, UserProgress, API_BASE_URL, LearningTip, Achievement, AiTutorConfig } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
 import { fallbackCourses } from './lib/fallbackCourses';
@@ -401,7 +402,7 @@ export default function App() {
             
             <div className="w-56 h-56 rounded-full overflow-hidden border-4 border-white shadow-lg bg-white mb-6 mt-6 hover:scale-105 transition-transform duration-300">
               <img 
-                src="/src/assets/images/chico_mascot.jpg" 
+                src={chicoMascot} 
                 alt="Chico Mascot" 
                 className="w-full h-full object-cover"
                 referrerPolicy="no-referrer"
@@ -764,7 +765,7 @@ export default function App() {
               {/* Chico Welcome Bubble in Hub */}
               <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl border border-white/10 max-w-xs backdrop-blur-xs shrink-0 self-stretch md:self-center">
                 <img 
-                  src="/src/assets/images/chico_mascot.jpg" 
+                  src={chicoMascot} 
                   alt="Chico" 
                   className="w-12 h-12 rounded-full object-cover border-2 border-white shrink-0"
                   referrerPolicy="no-referrer"

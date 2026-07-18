@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Lesson, Question, QuestionType } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { motion, AnimatePresence } from 'motion/react';
+
+import licoMascot from '../assets/images/lico_mascot_1784292046285.jpg';
+import teddyMascot from '../assets/images/teddy_mascot_1784292056581.jpg';
+import lunaMascot from '../assets/images/luna_mascot_1784292067117.jpg';
 import { 
   Heart, Trophy, CheckCircle, XCircle, ArrowRight, Sparkles, 
   HelpCircle, Volume2, Mic, RotateCcw, MessageSquare, Lightbulb 
@@ -184,9 +188,9 @@ export default function LessonPlayer({ lesson, courseLanguage, onComplete, onCan
   };
 
   const getMascotAvatar = (name?: string) => {
-    if (name === "Lico") return "/src/assets/images/lico_mascot_1784292046285.jpg";
-    if (name === "Teddy") return "/src/assets/images/teddy_mascot_1784292056581.jpg";
-    if (name === "Luna") return "/src/assets/images/luna_mascot_1784292067117.jpg";
+    if (name === "Lico") return licoMascot;
+    if (name === "Teddy") return teddyMascot;
+    if (name === "Luna") return lunaMascot;
     return null;
   };
 
@@ -373,8 +377,8 @@ export default function LessonPlayer({ lesson, courseLanguage, onComplete, onCan
             </div>
             
             <div className="flex gap-2 justify-center">
-              <img src="/src/assets/images/lico_mascot_1784292046285.jpg" className="w-12 h-12 rounded-full object-cover border border-slate-200" referrerPolicy="no-referrer" />
-              <img src="/src/assets/images/luna_mascot_1784292067117.jpg" className="w-12 h-12 rounded-full object-cover border border-slate-200" referrerPolicy="no-referrer" />
+              <img src={licoMascot} className="w-12 h-12 rounded-full object-cover border border-slate-200" referrerPolicy="no-referrer" />
+              <img src={lunaMascot} className="w-12 h-12 rounded-full object-cover border border-slate-200" referrerPolicy="no-referrer" />
             </div>
 
             <button

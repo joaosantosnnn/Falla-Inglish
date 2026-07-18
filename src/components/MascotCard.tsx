@@ -3,6 +3,10 @@ import { Mascot } from '../types';
 import { Volume2, BellRing, Sparkles } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
+import licoMascot from '../assets/images/lico_mascot_1784292046285.jpg';
+import teddyMascot from '../assets/images/teddy_mascot_1784292056581.jpg';
+import lunaMascot from '../assets/images/luna_mascot_1784292067117.jpg';
+
 const MASCOTS: Mascot[] = [
   {
     id: "lico",
@@ -10,7 +14,7 @@ const MASCOTS: Mascot[] = [
     trait: "Sábio, curioso e super brincalhão.",
     role: "Guia Principal & Tutor de Gramática.",
     quote: "Cada página lida é um novo mundo descoberto! Sabia que falar mais de um idioma exercita o cérebro igual ginástica?",
-    avatarUrl: "/src/assets/images/lico_mascot_1784292046285.jpg",
+    avatarUrl: licoMascot,
     styleColor: "from-blue-400 to-indigo-500",
     emoji: "📖"
   },
@@ -20,7 +24,7 @@ const MASCOTS: Mascot[] = [
     trait: "Calmo, carinhoso e extremamente paciente.",
     role: "Guardião de Erros e Motivação.",
     quote: "Errar faz parte de aprender, amiguinho! Eu te dou um abraço quentinho de pelúcia e tentamos de novo juntas, ok?",
-    avatarUrl: "/src/assets/images/teddy_mascot_1784292056581.jpg",
+    avatarUrl: teddyMascot,
     styleColor: "from-amber-400 to-orange-500",
     emoji: "🧸"
   },
@@ -30,7 +34,7 @@ const MASCOTS: Mascot[] = [
     trait: "Determinada, focada e amante de café.",
     role: "Protetora de Ofensivas (Streaks) & Conforto.",
     quote: "Não deixe a chama apagar! Apenas 5 minutinhos de foco hoje garantem o seu futuro brilhando amanhã!",
-    avatarUrl: "/src/assets/images/luna_mascot_1784292067117.jpg",
+    avatarUrl: lunaMascot,
     styleColor: "from-purple-400 to-pink-500",
     emoji: "🦉"
   },
