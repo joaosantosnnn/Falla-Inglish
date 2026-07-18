@@ -73,13 +73,6 @@ export interface UserProgress {
   state: string;
   country: string;
   coins: number;
-  avatarMascot?: string;
-  plan?: string;
-  lastLifeRegenTime?: number;
-  hasUsedFreeNameChange?: boolean;
-  nameChangeCards?: number;
-  unlockedBanners?: string[];
-  activeBanner?: string;
 }
 
 export const API_BASE_URL = ((import.meta as any).env?.VITE_API_BASE_URL as string) || '';

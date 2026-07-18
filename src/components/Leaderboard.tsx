@@ -52,7 +52,7 @@ export default function Leaderboard({ userXp, userStreak, userState, userCountry
       setEntries(combined);
       setLoading(false);
     } catch (e: any) {
-      console.warn("Erro ao buscar o ranking no Supabase:", e);
+      console.error("Erro ao buscar o ranking no Supabase:", e);
       // Fallback offline mock database to guarantee uninterrupted play
       const fallbackData = [
         { id: "1", name: "Davi", xp: 1240, streak: 45, state: "SP", country: "🇧🇷 Brasil", avatar: "🦊" },

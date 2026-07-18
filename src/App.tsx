@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import chicoMascot from './assets/images/chico_mascot_flat_vector_1784399850056.jpg';
-import licoMascot from './assets/images/lico_mascot_1784292046285.jpg';
-import teddyMascot from './assets/images/teddy_mascot_1784292056581.jpg';
-import lunaMascot from './assets/images/luna_mascot_1784292067117.jpg';
-import { Course, Lesson, UserProgress, API_BASE_URL, LearningTip, Achievement, AiTutorConfig, QuestionType } from './types';
+import chicoMascot from './assets/images/chico_mascot.jpg';
+import { Course, Lesson, UserProgress, API_BASE_URL, LearningTip, Achievement, AiTutorConfig } from './types';
 import { supabase, isSupabaseConfigured } from './lib/supabaseClient';
 import { fallbackCourses } from './lib/fallbackCourses';
 import LessonPlayer from './components/LessonPlayer';
@@ -11,25 +8,17 @@ import Leaderboard from './components/Leaderboard';
 import MascotCard from './components/MascotCard';
 import AdminPanel from './components/AdminPanel';
 import ArchitectureCenter from './components/ArchitectureCenter';
-import GoldCoinIcon from './components/GoldCoinIcon';
 import { 
   BookOpen, Trophy, Sparkles, Award, User, Flame, Settings, 
   ChevronRight, Brain, Globe, MessageSquare, AlertCircle, Plus,
-  LogOut, Lock, Mail, KeyRound, ArrowLeft, LogIn, ShoppingBag, Palette, CreditCard, Check,
-  Home, Gift, Menu, Edit
+  LogOut, Lock, Mail, KeyRound, ArrowLeft, LogIn
 } from 'lucide-react';
-import ProgressTrail from './components/ProgressTrail';
-import { MANUAL_LESSONS } from './data/manualLessons';
-import { shuffleArray } from './utils/shuffle';
-import { PROFILE_BANNERS } from './data/banners';
 
 const fallbackLearningTips: LearningTip[] = [
   { id: "tip_1", tip: "Sabia que o cérebro das crianças absorve novos fonemas até 2x mais rápido que o dos adultos? Nossos mascotes foram pensados para tornar esse processo super divertido!", mascot_id: "lico" },
   { id: "tip_2", tip: "Estudar 5 minutos por dia é muito melhor do que estudar 1 hora uma vez por semana. A constância ativa a memória de longo prazo!", mascot_id: "luna" },
   { id: "tip_3", tip: "Tente repetir as palavras em voz alta enquanto joga. A pronúncia ativa áreas motoras do cérebro, acelerando a fixação!", mascot_id: "pingo" },
-  { id: "tip_4", tip: "Não tenha medo de errar! O erro é o melhor atalho para o aprendizado e nos mostra onde precisamos focar mais.", mascot_id: "teddy" },
-  { id: "tip_chico_1", tip: "O Chico Yorkshire diz: 'Au au! Sempre que você acertar uma pergunta, imagine que está jogando minha bolinha rosa favorita para mim! Continue assim, estou torcendo por você!'", mascot_id: "chico" },
-  { id: "tip_chico_2", tip: "O Chico Yorkshire nos ensina que a persistência é tudo! Eu sou pequenininho, mas enfrento qualquer desafio com muita coragem. Seja corajoso com novos idiomas também!", mascot_id: "chico" }
+  { id: "tip_4", tip: "Não tenha medo de errar! O erro é o melhor atalho para o aprendizado e nos mostra onde precisamos focar mais.", mascot_id: "teddy" }
 ];
 
 const fallbackAchievements: Achievement[] = [
@@ -50,88 +39,11 @@ const defaultAiTutorConfig: AiTutorConfig = {
   default_topic: "Pedir uma pizza"
 };
 
-// Helper to inject manual lessons into the English course
-const injectManualLessons = (coursesList: Course[]): Course[] => {
-  if (!coursesList) return [];
-  return coursesList.map(course => {
-    if (course.id === 'en_basic') {
-      return {
-        ...course,
-        modules: [
-          {
-            id: "en_mod_1",
-            title: "Módulo 1 - Cotidiano / Básico",
-            description: "Aprenda o básico do inglês com conversações e saudações comuns.",
-            lessons: MANUAL_LESSONS
-          },
-          {
-            id: "en_mod_2",
-            title: "Módulo 2 - Comida e Compras",
-            description: "Vocabulário sobre restaurantes, mercados e compras (Em breve).",
-            lessons: []
-          },
-          {
-            id: "en_mod_3",
-            title: "Módulo 3 - Viagens e Lugares",
-            description: "Se vire em aeroportos, hotéis e nas ruas (Em breve).",
-            lessons: []
-          },
-          {
-            id: "en_mod_4",
-            title: "Módulo 4 - Trabalho e Estudos",
-            description: "Expressões de e-mail, reuniões e entrevistas (Em breve).",
-            lessons: []
-          },
-          {
-            id: "en_mod_5",
-            title: "Módulo 5 - Saúde e Emergências",
-            description: "Como pedir ajuda e ir ao médico (Em breve).",
-            lessons: []
-          },
-          {
-            id: "en_mod_6",
-            title: "Módulo 6 - Lazer e Social",
-            description: "Hobbies, planos com amigos e esportes (Em breve).",
-            lessons: []
-          },
-          {
-            id: "en_mod_7",
-            title: "Módulo 7 - Tecnologia e Comunicação",
-            description: "Celular, redes sociais e wifi (Em breve).",
-            lessons: []
-          },
-          {
-            id: "en_mod_8",
-            title: "Módulo 8 - Diversos",
-            description: "Temas divertidos e imaginativos de encerramento (Em breve).",
-            lessons: []
-          }
-        ]
-      };
-    }
-    return course;
-  });
-};
-
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'home' | 'learn' | 'mascots' | 'admin' | 'architecture' | 'ai-tutor' | 'profile' | 'shop' | 'plans' | 'leaderboard' | 'more'>('home');
-  const [courses, setCoursesState] = useState<Course[]>([]);
-  const setCourses = (newCourses: Course[] | ((prev: Course[]) => Course[])) => {
-    if (typeof newCourses === 'function') {
-      setCoursesState(prev => injectManualLessons(newCourses(prev)));
-    } else {
-      setCoursesState(injectManualLessons(newCourses));
-    }
-  };
+  const [activeTab, setActiveTab] = useState<'home' | 'learn' | 'mascots' | 'admin' | 'architecture' | 'ai-tutor'>('home');
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [supabaseError, setSupabaseError] = useState<string | null>(null);
-
-  // Theme state
-  const [theme, setTheme] = useState<string>(() => {
-    return localStorage.getItem('falla_theme') || 'classic';
-  });
-  const [showThemeSelector, setShowThemeSelector] = useState(false);
-  const [checkoutPlan, setCheckoutPlan] = useState<{ id: string; name: string; price: string } | null>(null);
 
   // Authentication states
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
@@ -167,12 +79,6 @@ export default function App() {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.coins === undefined) parsed.coins = 50;
-        if (!parsed.avatarMascot) parsed.avatarMascot = "chico";
-        if (!parsed.plan) parsed.plan = "free";
-        if (parsed.hasUsedFreeNameChange === undefined) parsed.hasUsedFreeNameChange = false;
-        if (parsed.nameChangeCards === undefined) parsed.nameChangeCards = 0;
-        if (!parsed.unlockedBanners) parsed.unlockedBanners = ["banner_classic", "banner_pastel"];
-        if (!parsed.activeBanner) parsed.activeBanner = "banner_classic";
         return parsed;
       } catch (e) {
         // Fallback
@@ -187,13 +93,7 @@ export default function App() {
       currentCourseId: "en_basic",
       state: localStorage.getItem('falla_user_state') || "SP",
       country: localStorage.getItem('falla_user_country') || "Brasil 🇧🇷",
-      coins: 50,
-      avatarMascot: "chico",
-      plan: "free",
-      hasUsedFreeNameChange: false,
-      nameChangeCards: 0,
-      unlockedBanners: ["banner_classic", "banner_pastel"],
-      activeBanner: "banner_classic"
+      coins: 50
     };
   });
 
@@ -202,221 +102,11 @@ export default function App() {
     localStorage.setItem('falla_user_progress', JSON.stringify(userProgress));
   }, [userProgress]);
 
-  // Countdown state for life regeneration
-  const [lifeCountdownStr, setLifeCountdownStr] = useState<string>("");
-
-  // Ensure lastLifeRegenTime is set when lives are below 5
-  useEffect(() => {
-    if (userProgress.plan !== 'premium' && userProgress.lives < 5 && !userProgress.lastLifeRegenTime) {
-      setUserProgress(prev => ({ ...prev, lastLifeRegenTime: Date.now() }));
-    }
-  }, [userProgress.lives, userProgress.plan, userProgress.lastLifeRegenTime]);
-
-  // Vidas regeneration check and countdown calculation
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (userProgress.plan === 'premium') {
-        if (userProgress.lives !== 999999) {
-          setUserProgress(prev => ({ ...prev, lives: 999999, lastLifeRegenTime: undefined }));
-        }
-        setLifeCountdownStr("");
-        return;
-      }
-
-      if (userProgress.lives >= 5) {
-        if (userProgress.lastLifeRegenTime) {
-          setUserProgress(prev => ({ ...prev, lastLifeRegenTime: undefined }));
-        }
-        setLifeCountdownStr("");
-        return;
-      }
-
-      const lastRegen = userProgress.lastLifeRegenTime;
-      if (!lastRegen) return;
-
-      const now = Date.now();
-      const elapsed = now - lastRegen;
-      const msPerLife = 20 * 60 * 1000; // 20 minutes in ms
-
-      if (elapsed >= msPerLife) {
-        const livesToRestore = Math.floor(elapsed / msPerLife);
-        const newLives = Math.min(5, userProgress.lives + livesToRestore);
-        const remainderTime = elapsed % msPerLife;
-        const nextRegen = newLives === 5 ? undefined : (now - remainderTime);
-
-        setUserProgress(prev => ({
-          ...prev,
-          lives: newLives,
-          lastLifeRegenTime: nextRegen
-        }));
-      } else {
-        const remainingMs = msPerLife - elapsed;
-        const mins = Math.floor(remainingMs / 60000);
-        const secs = Math.floor((remainingMs % 60000) / 1000);
-        setLifeCountdownStr(`${mins}:${secs < 10 ? '0' : ''}${secs}`);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [userProgress.lives, userProgress.plan, userProgress.lastLifeRegenTime]);
-
-  // Theme palettes definition
-  const themesList: Record<string, {
-    name: string;
-    green: string;
-    blue: string;
-    yellow: string;
-    orange: string;
-    red: string;
-    pink: string;
-    bg: string;
-    cardBg: string;
-    text: string;
-    border: string;
-  }> = {
-    classic: {
-      name: 'Clássico Verde/Azul',
-      green: '#78C800',
-      blue: '#1CB0F6',
-      yellow: '#FFC800',
-      orange: '#FF9600',
-      red: '#FF4B4B',
-      pink: '#CE82FF',
-      bg: '#F8FAFC',
-      cardBg: '#FFFFFF',
-      text: '#1E293B',
-      border: '#E2E8F0'
-    },
-    dark: {
-      name: 'Modo Espaço Escuro 🌌',
-      green: '#22C55E',
-      blue: '#38BDF8',
-      yellow: '#EAB308',
-      orange: '#F97316',
-      red: '#EF4444',
-      pink: '#D8B4FE',
-      bg: '#0F172A',
-      cardBg: '#1E293B',
-      text: '#F1F5F9',
-      border: '#334155'
-    },
-    warm: {
-      name: 'Pôr do Sol Quente 🌅',
-      green: '#10B981',
-      blue: '#EC4899',
-      yellow: '#F59E0B',
-      orange: '#F97316',
-      red: '#EF4444',
-      pink: '#8B5CF6',
-      bg: '#FFFBEB',
-      cardBg: '#FFFFFF',
-      text: '#78350F',
-      border: '#FDE68A'
-    },
-    pastel: {
-      name: 'Doce de Leite Pastel 🌸',
-      green: '#A7F3D0',
-      blue: '#BAE6FD',
-      yellow: '#FEF08A',
-      orange: '#FED7AA',
-      red: '#FECACA',
-      pink: '#F3E8FF',
-      bg: '#FAF5FF',
-      cardBg: '#FFFFFF',
-      text: '#581C87',
-      border: '#E9D5FF'
-    }
-  };
-
-  useEffect(() => {
-    const selectedTheme = themesList[theme] || themesList.classic;
-    const root = document.documentElement;
-    
-    root.style.setProperty('--color-falla-green', selectedTheme.green);
-    root.style.setProperty('--color-falla-blue', selectedTheme.blue);
-    root.style.setProperty('--color-falla-yellow', selectedTheme.yellow);
-    root.style.setProperty('--color-falla-orange', selectedTheme.orange);
-    root.style.setProperty('--color-falla-red', selectedTheme.red);
-    root.style.setProperty('--color-falla-pink', selectedTheme.pink);
-    
-    root.style.setProperty('--falla-green', selectedTheme.green);
-    root.style.setProperty('--falla-blue', selectedTheme.blue);
-    root.style.setProperty('--falla-yellow', selectedTheme.yellow);
-    root.style.setProperty('--falla-orange', selectedTheme.orange);
-    root.style.setProperty('--falla-red', selectedTheme.red);
-    root.style.setProperty('--falla-pink', selectedTheme.pink);
-    
-    root.style.setProperty('--theme-bg', selectedTheme.bg);
-    root.style.setProperty('--theme-card-bg', selectedTheme.cardBg);
-    root.style.setProperty('--theme-text', selectedTheme.text);
-    root.style.setProperty('--theme-border', selectedTheme.border);
-    
-    localStorage.setItem('falla_theme', theme);
-  }, [theme]);
-
   // AI custom lesson generator states
   const [customTopic, setCustomTopic] = useState("");
   const [customLang, setCustomLang] = useState<'en' | 'es' | 'pt'>('en');
   const [generatingAiLesson, setGeneratingAiLesson] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-
-  // Name Change States & Logic
-  const [isEditNameModalOpen, setIsEditNameModalOpen] = useState(false);
-  const [tempNewName, setTempNewName] = useState("");
-  const [nameChangeError, setNameChangeError] = useState<string | null>(null);
-
-  const handleOpenEditNameModal = () => {
-    const freeAvailable = !userProgress.hasUsedFreeNameChange;
-    const cardsAvailable = (userProgress.nameChangeCards || 0) > 0;
-
-    if (!freeAvailable && !cardsAvailable) {
-      alert("Você já usou sua troca gratuita. Compre um Cartão de Alteração de Nome na loja para trocar novamente.");
-      setActiveTab('shop');
-      return;
-    }
-
-    setTempNewName(userName);
-    setNameChangeError(null);
-    setIsEditNameModalOpen(true);
-  };
-
-  const handleConfirmNameChange = (e: React.FormEvent) => {
-    e.preventDefault();
-    setNameChangeError(null);
-
-    const trimmed = tempNewName.trim();
-    if (trimmed.length < 3 || trimmed.length > 20) {
-      setNameChangeError("O nome de usuário deve ter entre 3 e 20 caracteres!");
-      return;
-    }
-
-    const freeAvailable = !userProgress.hasUsedFreeNameChange;
-    const cardsAvailable = (userProgress.nameChangeCards || 0) > 0;
-
-    if (freeAvailable) {
-      localStorage.setItem('falla_user_name', trimmed);
-      setUserName(trimmed);
-      setUserProgress(prev => ({
-        ...prev,
-        hasUsedFreeNameChange: true
-      }));
-      setIsEditNameModalOpen(false);
-      alert("Sucesso! Nome alterado gratuitamente!");
-    } else if (cardsAvailable) {
-      localStorage.setItem('falla_user_name', trimmed);
-      setUserName(trimmed);
-      setUserProgress(prev => ({
-        ...prev,
-        nameChangeCards: Math.max(0, (prev.nameChangeCards || 0) - 1)
-      }));
-      setIsEditNameModalOpen(false);
-      alert("Sucesso! Nome alterado usando 1 Cartão de Alteração de Nome!");
-    } else {
-      setIsEditNameModalOpen(false);
-      alert("Você já usou sua troca gratuita. Compre um Cartão de Alteração de Nome na loja para trocar novamente.");
-      setActiveTab('shop');
-    }
-  };
 
   // Dynamic Content States from Supabase
   const [learningTips, setLearningTips] = useState<LearningTip[]>(fallbackLearningTips);
@@ -500,7 +190,7 @@ export default function App() {
       }
       setLoading(false);
     } catch (e: any) {
-      console.warn("Erro ao carregar cursos do Supabase (usando fallback offline):", e);
+      console.error("Erro ao carregar cursos do Supabase (usando fallback offline):", e);
       setCourses(fallbackCourses);
       setLoading(false);
     }
@@ -617,32 +307,6 @@ export default function App() {
     setActiveTab('home');
   };
 
-  const handleStartLesson = (lesson: Lesson) => {
-    if (userProgress.plan !== 'premium' && userProgress.lives <= 0) {
-      alert("Você está sem vidas! 🥺\n\nNo plano Gratuito, você tem um limite de 5 vidas. Suas vidas se regeneram em +1 a cada 20 minutos, ou você pode obter um Kit de Vida Extra na Loja usando suas Moedas de Sorte!");
-      setActiveTab('shop');
-      return;
-    }
-
-    // Deep clone the lesson and shuffle questions and options
-    const shuffledLesson: Lesson = {
-      ...lesson,
-      questions: shuffleArray(
-        lesson.questions.map((q) => {
-          if (q.type === QuestionType.MULTIPLE_CHOICE && q.options) {
-            return {
-              ...q,
-              options: shuffleArray(q.options),
-            };
-          }
-          return { ...q };
-        })
-      ),
-    };
-
-    setActiveLesson(shuffledLesson);
-  };
-
   const handleCompleteLesson = (xpEarned: number, coinsEarned: number) => {
     if (activeLesson) {
       const isFirstTime = !userProgress.completedLessons.includes(activeLesson.id);
@@ -670,18 +334,15 @@ export default function App() {
 
       const newCoins = (userProgress.coins || 0) + coinsEarned;
 
-      setUserProgress(prev => {
-        const nextLives = prev.plan === 'premium' ? 999999 : Math.min(5, prev.lives);
-        return {
-          ...prev,
-          xp: newXp,
-          completedLessons: newCompleted,
-          level: newLevel,
-          streak: newStreak,
-          coins: newCoins,
-          lives: nextLives
-        };
-      });
+      setUserProgress(prev => ({
+        ...prev,
+        xp: newXp,
+        completedLessons: newCompleted,
+        level: newLevel,
+        streak: newStreak,
+        coins: newCoins,
+        lives: 5 // Restore lives on complete
+      }));
     }
     setActiveLesson(null);
   };
@@ -691,12 +352,6 @@ export default function App() {
     e.preventDefault();
     if (!customTopic.trim()) {
       alert("Por favor, digite um tema!");
-      return;
-    }
-
-    if (userProgress.plan !== 'premium' && userProgress.lives <= 0) {
-      alert("Você está sem vidas! 🥺\n\nNo plano Gratuito, você tem um limite de 5 vidas. Suas vidas se regeneram em +1 a cada 20 minutos, ou você pode obter um Kit de Vida Extra na Loja usando suas Moedas de Sorte!");
-      setActiveTab('shop');
       return;
     }
 
@@ -722,7 +377,7 @@ export default function App() {
         setAiError("Não conseguimos processar o retorno da lição. Verifique os limites da chave API.");
       }
     } catch (e: any) {
-      console.warn("Erro na geração de lição de IA:", e);
+      console.error(e);
       setAiError("Ocorreu uma falha na requisição da IA no Supabase. Verifique se a Edge Function está implantada.");
     } finally {
       setGeneratingAiLesson(false);
@@ -757,7 +412,7 @@ export default function App() {
             <div className="relative bg-white border-2 border-slate-200 rounded-2xl p-4 shadow-sm max-w-xs">
               <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-t-2 border-l-2 border-slate-200 rotate-45"></div>
               <p className="text-xs font-bold text-slate-700 leading-relaxed">
-                "Oi! Eu sou o <strong>Chico</strong>, seu companheiro Yorkshire super leal! Pronto para brincar com minha bolinha rosa e aprender um novo idioma hoje?"
+                "Oi! Eu sou o <strong>Chico</strong>! Pronto para brincar e aprender um novo idioma hoje de um jeito super divertido?"
               </p>
             </div>
             <div className="mt-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
@@ -1008,46 +663,32 @@ export default function App() {
             onCancel={() => setActiveLesson(null)}
             userXp={userProgress.xp}
             userLevel={userProgress.level}
-            userLives={userProgress.lives}
-            userPlan={userProgress.plan || 'free'}
-            onLoseLife={() => {
-              setUserProgress(prev => {
-                if (prev.plan === 'premium') return prev;
-                const nextLives = Math.max(0, prev.lives - 1);
-                const nextRegen = prev.lives === 5 ? Date.now() : prev.lastLifeRegenTime;
-                return {
-                  ...prev,
-                  lives: nextLives,
-                  lastLifeRegenTime: nextRegen
-                };
-              });
-            }}
           />
         </div>
       )}
 
       {/* Top Header Bar */}
       <header className="sticky top-0 z-40 bg-white border-b-2 border-slate-200 px-4 py-3">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-center">
-          {/* Centered and beautifully balanced status bar */}
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 font-extrabold text-sm w-full">
-            {/* Quick Link to Home portal */}
-            <button
-              onClick={() => setActiveTab('home')}
-              className="flex items-center gap-1.5 text-falla-green hover:scale-105 transition-all font-black text-xs uppercase cursor-pointer mr-1"
-              title="Página Inicial"
-            >
-              <span className="text-base">🏡</span>
-              <span className="hidden xs:inline">Início</span>
-            </button>
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('home')}>
+            <div className="w-10 h-10 bg-falla-green rounded-xl flex items-center justify-center text-white font-black text-2xl italic shadow-sm">
+              F
+            </div>
+            <h1 className="text-2xl font-black text-falla-green tracking-tighter">FALLA</h1>
+            <span className="hidden md:inline-block text-[10px] font-bold bg-falla-green/10 text-falla-green px-2.5 py-0.5 rounded-full border border-falla-green/20 ml-2">
+              {interfaceTexts.app_badge || "Protótipo High-Fidelity"}
+            </span>
+          </div>
 
+          {/* User Status Ribbon */}
+          <div className="flex items-center gap-3 sm:gap-6 font-extrabold text-sm shrink-0">
             {/* Active Language Selector */}
-            <div className="flex items-center gap-1 bg-slate-150 border border-slate-200 rounded-xl px-2 py-0.5 text-xs">
-              <Globe size={13} className="text-falla-blue animate-spin-slow" />
+            <div className="hidden sm:flex items-center gap-1.5 bg-slate-100 border-2 border-slate-200 rounded-xl px-2.5 py-1 text-xs">
+              <Globe size={14} className="text-falla-blue animate-spin-slow" />
               <select
                 value={selectedCourseId}
                 onChange={(e) => setSelectedCourseId(e.target.value)}
-                className="bg-transparent font-black text-slate-700 outline-none cursor-pointer text-xs"
+                className="bg-transparent font-bold text-slate-700 outline-none cursor-pointer"
               >
                 {courses.map(c => (
                   <option key={c.id} value={c.id}>{c.flag} {c.name.split(' ')[0]}</option>
@@ -1055,83 +696,24 @@ export default function App() {
               </select>
             </div>
 
-            <span className="flex items-center gap-1.5 text-falla-orange hover:scale-105 transition-all cursor-pointer font-black" title="Ofensiva diária" onClick={() => setActiveTab('profile')}>
-              <span className="text-base">🔥</span>
+            <span className="flex items-center gap-1.5 text-falla-orange hover:scale-105 transition-all cursor-pointer font-black" title="Ofensiva diária">
+              <span className="text-xl">🔥</span>
               <span className="tracking-tight uppercase text-xs font-black">{userProgress.streak} DIAS</span>
             </span>
             
-            <span className="flex items-center gap-1.5 text-falla-blue hover:scale-105 transition-all cursor-pointer font-black" title="XP acumulados" onClick={() => setActiveTab('profile')}>
-              <span className="text-base">💎</span>
+            <span className="flex items-center gap-1.5 text-falla-blue hover:scale-105 transition-all cursor-pointer font-black" title="XP acumulados">
+              <span className="text-xl">💎</span>
               <span className="tracking-tight uppercase text-xs font-black">{userProgress.xp}/100 XP</span>
             </span>
 
-            <span className="flex items-center gap-1.5 text-amber-500 hover:scale-105 transition-all cursor-pointer font-black" title="Moedas de Sorte" onClick={() => setActiveTab('shop')}>
-              <GoldCoinIcon className="w-4.5 h-4.5" />
+            <span className="flex items-center gap-1.5 text-amber-500 hover:scale-105 transition-all cursor-pointer font-black" title="Moedas de Sorte">
+              <span className="text-xl">🪙</span>
               <span className="tracking-tight uppercase text-xs font-black">{userProgress.coins || 0} MOEDAS</span>
             </span>
 
-            <span 
-              className={`flex items-center gap-1.5 hover:scale-105 transition-all cursor-pointer font-black ${userProgress.plan === 'premium' ? 'text-rose-500' : 'text-falla-red'}`} 
-              title={userProgress.plan === 'premium' ? "Vidas Ilimitadas (Premium)" : "Sua reserva de vidas"} 
-              onClick={() => {
-                if (userProgress.plan !== 'premium') {
-                  setActiveTab('shop');
-                } else {
-                  setActiveTab('plans');
-                }
-              }}
-            >
-              <span className="text-base">❤️</span>
-              <span className="tracking-tight uppercase text-xs font-black">
-                {userProgress.plan === 'premium' ? 'ILIMITADAS 👑' : `${userProgress.lives}/5`}
-              </span>
-              {userProgress.plan !== 'premium' && userProgress.lives < 5 && lifeCountdownStr && (
-                <span className="text-[10px] text-slate-400 font-extrabold normal-case">({lifeCountdownStr})</span>
-              )}
-            </span>
-
-            <span className="flex items-center gap-1 bg-falla-pink text-white px-2 py-0.5 rounded-full text-[10px] shadow-sm font-black uppercase cursor-pointer" title="Nível atual" onClick={() => setActiveTab('profile')}>
+            <span className="hidden xs:flex items-center gap-1 bg-falla-pink text-white px-2.5 py-0.5 rounded-full text-[10px] shadow-sm font-black uppercase" title="Nível atual">
               Lvl {userProgress.level}
             </span>
-
-            <span className="h-4 w-0.5 bg-slate-200"></span>
-
-            {/* Theme Selector Toggle */}
-            <div className="relative">
-              <button 
-                onClick={() => setShowThemeSelector(!showThemeSelector)}
-                className="flex items-center gap-1 text-slate-400 hover:text-falla-blue hover:scale-105 transition-all font-black text-xs uppercase cursor-pointer"
-                title="Mudar Tema de Cores"
-              >
-                <Palette size={15} />
-                <span className="hidden sm:inline">Tema</span>
-              </button>
-              
-              {showThemeSelector && (
-                <div className="absolute right-1/2 translate-x-1/2 sm:translate-x-0 sm:right-0 mt-2 w-48 bg-white border-2 border-slate-200 rounded-2xl shadow-xl p-3 z-50 space-y-2 animate-fade-in">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2 text-center">Selecione um Tema</p>
-                  {Object.entries(themesList).map(([id, t]) => (
-                    <button
-                      key={id}
-                      onClick={() => {
-                        setTheme(id);
-                        setShowThemeSelector(false);
-                      }}
-                      className={`w-full flex items-center justify-between p-2 rounded-xl text-xs font-bold transition-all cursor-pointer hover:bg-slate-50 ${
-                        theme === id ? 'bg-falla-blue/10 border border-falla-blue text-falla-blue font-black' : 'border border-transparent text-slate-700'
-                      }`}
-                    >
-                      <span>{t.name.split(' ')[0]}</span>
-                      <div className="flex gap-1 shrink-0">
-                        <span className="w-2.5 h-2.5 rounded-full border border-slate-200" style={{ backgroundColor: t.green }} />
-                        <span className="w-2.5 h-2.5 rounded-full border border-slate-200" style={{ backgroundColor: t.blue }} />
-                        <span className="w-2.5 h-2.5 rounded-full border border-slate-200" style={{ backgroundColor: t.yellow }} />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
 
             {/* Logout button */}
             <button 
@@ -1139,7 +721,7 @@ export default function App() {
               className="flex items-center gap-1 text-slate-400 hover:text-red-500 hover:scale-105 transition-all font-black text-xs uppercase cursor-pointer"
               title="Sair da conta"
             >
-              <LogOut size={15} />
+              <LogOut size={16} />
               <span className="hidden sm:inline">Sair</span>
             </button>
           </div>
@@ -1147,7 +729,7 @@ export default function App() {
       </header>
 
       {/* Main Body Layout */}
-      <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 pb-24 flex flex-col gap-6">
+      <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 flex flex-col gap-6">
 
         {activeTab === 'home' ? (
           /* Portal/Hub Page (Página Inicial) */
@@ -1189,7 +771,7 @@ export default function App() {
                   referrerPolicy="no-referrer"
                 />
                 <div className="text-[10px] font-bold text-white leading-normal">
-                  "Au au! Estou de olho! Quem mantiver a ofensiva hoje ganha um petisco e adesivos virtuais do Chico! Escolha uma lição abaixo!"
+                  "Estou de olho! Quem estuda hoje ganha adesivo virtual extra! Escolha uma opção abaixo para começar!"
                 </div>
               </div>
             </div>
@@ -1216,56 +798,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Trilha de Progresso (Estilo Duolingo) */}
-            {selectedCourse ? (
-              <div className="bg-white border-2 border-slate-200 rounded-3xl p-4 md:p-6 shadow-2xs">
-                <div className="flex items-center justify-between gap-4 border-b border-slate-100 pb-4 mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl bg-slate-50 p-2 rounded-2xl border-2 border-slate-200 shadow-3xs">
-                      {selectedCourse.flag}
-                    </span>
-                    <div>
-                      <h3 className="font-black text-sm text-slate-800 leading-tight">
-                        Trilha de {selectedCourse.name}
-                      </h3>
-                      <p className="text-[10px] text-slate-400 font-bold mt-0.5 uppercase tracking-wider">
-                        Seu Progresso Diário (Estudo Principal)
-                      </p>
-                    </div>
-                  </div>
-                  {/* Dynamic Flag selector inside the trail container to easily switch studying language */}
-                  <div className="flex gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200">
-                    {courses.map((c) => (
-                      <button
-                        key={c.id}
-                        onClick={() => setSelectedCourseId(c.id)}
-                        className={`p-1.5 rounded-xl text-sm transition-all cursor-pointer ${
-                          selectedCourseId === c.id
-                            ? 'bg-white shadow-xs scale-105'
-                            : 'opacity-60 hover:opacity-100'
-                        }`}
-                        title={c.name}
-                      >
-                        {c.flag}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <ProgressTrail
-                  selectedCourse={selectedCourse}
-                  userProgress={userProgress}
-                  onStartLesson={handleStartLesson}
-                />
-              </div>
-            ) : (
-              <div className="bg-white border-2 border-slate-200 rounded-3xl p-8 text-center">
-                <p className="text-slate-500 text-xs font-bold">Nenhum curso disponível para visualização.</p>
-              </div>
-            )}
-
-            {/* Path Selector - 5 beautiful big pages cards (COMMENTED OUT FOR VISUAL VALIDATION) */}
-            {/*
+            {/* Path Selector - 5 beautiful big pages cards */}
             <div className="space-y-4">
               <h3 className="text-base font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
                 <span>🎯</span> Escolha a sua Atividade
@@ -1273,6 +806,7 @@ export default function App() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 
+                {/* 1. Estudo Diário */}
                 <div 
                   onClick={() => setActiveTab('learn')}
                   className="bg-white border-2 border-slate-200 hover:border-falla-green rounded-3xl p-6 shadow-xs hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group"
@@ -1292,6 +826,7 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* 2. Tutor de IA */}
                 <div 
                   onClick={() => setActiveTab('ai-tutor')}
                   className="bg-white border-2 border-slate-200 hover:border-falla-blue rounded-3xl p-6 shadow-xs hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group"
@@ -1311,6 +846,7 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* 3. Nossos Mascotes */}
                 <div 
                   onClick={() => setActiveTab('mascots')}
                   className="bg-white border-2 border-slate-200 hover:border-falla-pink rounded-3xl p-6 shadow-xs hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group"
@@ -1330,6 +866,7 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* 4. Painel Admin */}
                 <div 
                   onClick={() => setActiveTab('admin')}
                   className="bg-white border-2 border-slate-200 hover:border-falla-orange rounded-3xl p-6 shadow-xs hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group"
@@ -1340,21 +877,22 @@ export default function App() {
                     </div>
                     <span className="text-[10px] bg-amber-50 text-falla-orange font-black px-2 py-0.5 rounded-full">CONFIGURAÇÕES</span>
                   </div>
-                  <h4 className="text-base font-black text-slate-800 group-hover:text-falla-orange transition-colors font-sans">Painel Admin</h4>
+                  <h4 className="text-base font-black text-slate-800 group-hover:text-falla-orange transition-colors">Painel Admin</h4>
                   <p className="text-[11px] text-slate-400 mt-1.5 font-bold leading-normal">
-                    Gerencie cursos, dicas, regras de negócios e integrações por este centro de controle.
+                    Gerencie cursos, regras do aplicativo, dicas de estudos, textos dinâmicos de interface e configurações da API de IA.
                   </p>
                   <div className="mt-4 flex items-center gap-1 text-[11px] font-black text-falla-orange group-hover:translate-x-1 transition-transform">
                     Acessar Painel <ChevronRight size={14} />
                   </div>
                 </div>
 
+                {/* 5. Arquitetura & Stack */}
                 <div 
                   onClick={() => setActiveTab('architecture')}
                   className="bg-white border-2 border-slate-200 hover:border-falla-yellow rounded-3xl p-6 shadow-xs hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group"
                 >
                   <div className="flex justify-between items-start mb-4">
-                    <div className="w-12 h-12 bg-yellow-100 group-hover:bg-falla-yellow text-slate-950 group-hover:text-slate-950 rounded-2xl flex items-center justify-center text-2xl transition-colors duration-300 shadow-2xs font-bold">
+                    <div className="w-12 h-12 bg-yellow-100 group-hover:bg-falla-yellow text-slate-900 group-hover:text-slate-900 rounded-2xl flex items-center justify-center text-2xl transition-colors duration-300 shadow-2xs font-bold">
                       🏛️
                     </div>
                     <span className="text-[10px] bg-yellow-50 text-amber-700 font-black px-2 py-0.5 rounded-full">TECNICO & INFRA</span>
@@ -1368,66 +906,8 @@ export default function App() {
                   </div>
                 </div>
 
-                <div 
-                  onClick={() => setActiveTab('profile')}
-                  className="bg-white border-2 border-slate-200 hover:border-falla-blue rounded-3xl p-6 shadow-xs hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="w-12 h-12 bg-sky-100 group-hover:bg-falla-blue text-falla-blue group-hover:text-white rounded-2xl flex items-center justify-center text-2xl transition-colors duration-300 shadow-2xs font-bold">
-                      👤
-                    </div>
-                    <span className="text-[10px] bg-sky-50 text-falla-blue font-black px-2 py-0.5 rounded-full">ESTATÍSTICAS</span>
-                  </div>
-                  <h4 className="text-base font-black text-slate-800 group-hover:text-falla-blue transition-colors">Seu Perfil</h4>
-                  <p className="text-[11px] text-slate-400 mt-1.5 font-bold leading-normal">
-                    Veja suas conquistas de XP, configure sua conta, altere seu avatar de mascote favorito e acompanhe sua evolução!
-                  </p>
-                  <div className="mt-4 flex items-center gap-1 text-[11px] font-black text-falla-blue group-hover:translate-x-1 transition-transform">
-                    Ver Meu Perfil <ChevronRight size={14} />
-                  </div>
-                </div>
-
-                <div 
-                  onClick={() => setActiveTab('shop')}
-                  className="bg-white border-2 border-slate-200 hover:border-amber-500 rounded-3xl p-6 shadow-xs hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="w-12 h-12 bg-amber-100 group-hover:bg-amber-500 rounded-2xl flex items-center justify-center transition-colors duration-300 shadow-2xs">
-                      <GoldCoinIcon className="w-8 h-8 group-hover:scale-110 transition-transform" />
-                    </div>
-                    <span className="text-[10px] bg-amber-50 text-amber-600 font-black px-2 py-0.5 rounded-full">LOJA DE COINS</span>
-                  </div>
-                  <h4 className="text-base font-black text-slate-800 group-hover:text-amber-500 transition-colors font-sans">Loja de Itens</h4>
-                  <p className="text-[11px] text-slate-400 mt-1.5 font-bold leading-normal">
-                    Troque suas Moedas por incríveis Poções de XP extras para subir de nível muito mais rápido!
-                  </p>
-                  <div className="mt-4 flex items-center gap-1 text-[11px] font-black text-amber-500 group-hover:translate-x-1 transition-transform">
-                    Visitar Loja <ChevronRight size={14} />
-                  </div>
-                </div>
-
-                <div 
-                  onClick={() => setActiveTab('plans')}
-                  className="bg-white border-2 border-slate-200 hover:border-falla-pink rounded-3xl p-6 shadow-xs hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="w-12 h-12 bg-purple-100 group-hover:bg-falla-pink text-falla-pink group-hover:text-white rounded-2xl flex items-center justify-center text-2xl transition-colors duration-300 shadow-2xs font-bold">
-                      ⭐
-                    </div>
-                    <span className="text-[10px] bg-purple-50 text-falla-pink font-black px-2 py-0.5 rounded-full">BENEFÍCIOS EXCLUSIVOS</span>
-                  </div>
-                  <h4 className="text-base font-black text-slate-800 group-hover:text-falla-pink transition-colors">Assinatura Premium</h4>
-                  <p className="text-[11px] text-slate-400 mt-1.5 font-bold leading-normal">
-                    Tenha vidas infinitas, zero anúncios, tutor de IA totalmente liberado para falar e lições ilimitadas!
-                  </p>
-                  <div className="mt-4 flex items-center gap-1 text-[11px] font-black text-falla-pink group-hover:translate-x-1 transition-transform">
-                    Ver Planos <ChevronRight size={14} />
-                  </div>
-                </div>
-
               </div>
             </div>
-            */}
           </div>
         ) : (
           /* Sub-Pages Container (Cada tela individual e espaçosa com botão de voltar) */
@@ -1444,17 +924,12 @@ export default function App() {
                 </button>
                 <span className="h-6 w-0.5 bg-slate-200 hidden sm:inline"></span>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl flex items-center">
+                  <span className="text-xl">
                     {activeTab === 'learn' && '📖'}
                     {activeTab === 'ai-tutor' && '🧠'}
                     {activeTab === 'mascots' && '🦉'}
                     {activeTab === 'admin' && '⚙️'}
                     {activeTab === 'architecture' && '🏛️'}
-                    {activeTab === 'profile' && '👤'}
-                    {activeTab === 'shop' && <GoldCoinIcon className="w-5 h-5" />}
-                    {activeTab === 'plans' && '⭐'}
-                    {activeTab === 'leaderboard' && '🏆'}
-                    {activeTab === 'more' && '✨'}
                   </span>
                   <h2 className="text-xs font-black text-slate-800 uppercase tracking-wider">
                     {activeTab === 'learn' && 'Estudo Diário'}
@@ -1462,11 +937,6 @@ export default function App() {
                     {activeTab === 'mascots' && 'Nossos Mascotes'}
                     {activeTab === 'admin' && 'Painel Administrativo'}
                     {activeTab === 'architecture' && 'Arquitetura & Stack'}
-                    {activeTab === 'profile' && 'Perfil do Estudante'}
-                    {activeTab === 'shop' && 'Loja de Recompensas'}
-                    {activeTab === 'plans' && 'Planos de Assinatura'}
-                    {activeTab === 'leaderboard' && 'Ranking Regional'}
-                    {activeTab === 'more' && 'Mais Recursos'}
                   </h2>
                 </div>
               </div>
@@ -1479,11 +949,6 @@ export default function App() {
                   { id: 'mascots', label: 'Mascotes', icon: Award, color: 'text-falla-pink' },
                   { id: 'admin', label: 'Admin', icon: Settings, color: 'text-falla-orange' },
                   { id: 'architecture', label: 'Stack', icon: Trophy, color: 'text-falla-yellow' },
-                  { id: 'profile', label: 'Perfil', icon: User, color: 'text-sky-500' },
-                  { id: 'shop', label: 'Loja', icon: ShoppingBag, color: 'text-amber-500' },
-                  { id: 'plans', label: 'Planos', icon: CreditCard, color: 'text-falla-pink' },
-                  { id: 'leaderboard', label: 'Ranking', icon: Trophy, color: 'text-falla-yellow' },
-                  { id: 'more', label: 'Mais', icon: Menu, color: 'text-falla-pink' },
                 ].map((item) => (
                   <button
                     key={item.id}
@@ -1615,7 +1080,7 @@ export default function App() {
                                         </div>
                                         
                                         <button
-                                          onClick={() => handleStartLesson(les)}
+                                          onClick={() => setActiveLesson(les)}
                                           className={`font-black text-xs px-4.5 py-2.5 rounded-2xl transition-all flex items-center gap-1.5 shadow-sm ${
                                             isCompleted 
                                               ? 'bg-falla-green hover:bg-falla-green/90 text-white border-b-4 border-b-green-700 active:translate-y-1 active:border-b-0 cursor-pointer' 
@@ -1798,689 +1263,6 @@ export default function App() {
                     </div>
                   </div>
                 )}
-
-                {/* 6. PERFIL VIEW */}
-                {activeTab === 'profile' && (
-                  <div className="space-y-6 animate-fade-in">
-                    <div className="bg-white border-2 border-slate-200 rounded-3xl overflow-hidden shadow-2xs">
-                      {/* Active Profile Banner (Discord Style) */}
-                      {(() => {
-                        const activeBannerId = userProgress.activeBanner || 'banner_classic';
-                        const activeBannerObj = PROFILE_BANNERS.find(b => b.id === activeBannerId) || PROFILE_BANNERS[0];
-                        return (
-                          <div 
-                            style={{ background: activeBannerObj.imageUrl }} 
-                            className="h-32 sm:h-40 w-full relative transition-all duration-300"
-                          />
-                        );
-                      })()}
-                      
-                      {/* User Avatar, Details & Stats */}
-                      <div className="p-6 pt-0 relative flex flex-col md:flex-row items-center md:items-end gap-6 -mt-14 md:-mt-16 z-10 text-center md:text-left">
-                        {/* Selected Mascot Portrait */}
-                        <div className="relative shrink-0">
-                          <div className="w-28 h-28 rounded-full overflow-hidden border-4 border-white bg-sky-50 shadow-md flex items-center justify-center">
-                            <img 
-                              src={
-                                userProgress.avatarMascot === 'lico' ? licoMascot :
-                                userProgress.avatarMascot === 'teddy' ? teddyMascot :
-                                userProgress.avatarMascot === 'luna' ? lunaMascot :
-                                chicoMascot
-                              } 
-                              alt="Avatar" 
-                              className="w-full h-full object-cover"
-                              referrerPolicy="no-referrer"
-                            />
-                          </div>
-                          <span className="absolute bottom-1 right-1 bg-falla-blue text-white w-7 h-7 rounded-full border-2 border-white flex items-center justify-center text-xs font-black shadow-sm">
-                            ★
-                          </span>
-                        </div>
-
-                        <div className="space-y-2 flex-1 w-full">
-                          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2.5 pt-2 md:pt-0">
-                            <div className="flex items-center gap-1.5">
-                              <h3 className="text-xl font-black text-slate-800">{userName}</h3>
-                              <button 
-                                onClick={handleOpenEditNameModal}
-                                title="Alterar Nome de Usuário"
-                                className="text-slate-400 hover:text-falla-blue p-1.5 rounded-lg hover:bg-slate-100 transition-all cursor-pointer"
-                              >
-                                <Edit size={16} />
-                              </button>
-                            </div>
-                            <span className="bg-falla-blue/10 text-falla-blue text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-falla-blue/20">
-                              Plano {userProgress.plan === 'premium' ? '👑 Premium' : 'Free'}
-                            </span>
-                          </div>
-                          <p className="text-xs text-slate-400 font-bold">
-                            Estudante ativo em <strong className="text-slate-600">{userProgress.state || 'SP'}</strong>, {userProgress.country || 'Brasil 🇧🇷'}
-                          </p>
-                          
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
-                            <div className="bg-slate-50 border-2 border-slate-150 rounded-2xl p-3 text-center">
-                              <span className="block text-xl">🔥</span>
-                              <span className="block text-xs font-black text-slate-800">{userProgress.streak} Dias</span>
-                              <span className="text-[9px] font-extrabold text-slate-400 uppercase">Ofensiva</span>
-                            </div>
-                            <div className="bg-slate-50 border-2 border-slate-150 rounded-2xl p-3 text-center">
-                              <span className="block text-xl">💎</span>
-                              <span className="block text-xs font-black text-slate-800">{userProgress.xp} XP</span>
-                              <span className="text-[9px] font-extrabold text-slate-400 uppercase">Experiência</span>
-                            </div>
-                            <div className="bg-slate-50 border-2 border-slate-150 rounded-2xl p-3 flex flex-col items-center justify-center text-center">
-                              <GoldCoinIcon className="w-6 h-6 mb-1" />
-                              <span className="block text-xs font-black text-slate-800">{userProgress.coins || 0}</span>
-                              <span className="text-[9px] font-extrabold text-slate-400 uppercase">Moedas</span>
-                            </div>
-                            <div className="bg-slate-50 border-2 border-slate-150 rounded-2xl p-3 text-center">
-                              <span className="block text-xl">🏆</span>
-                              <span className="block text-xs font-black text-slate-800">Lvl {userProgress.level}</span>
-                              <span className="text-[9px] font-extrabold text-slate-400 uppercase">Nível</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Choose Mascot Avatar Grid */}
-                    <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4">
-                      <div>
-                        <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
-                          <span>🎭</span> Escolha o seu Mascote de Avatar
-                        </h4>
-                        <p className="text-[11px] text-slate-400 font-bold">
-                          O mascote selecionado será exibido como seu avatar oficial de estudos no cabeçalho e páginas da Falla!
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        {[
-                          { id: 'chico', name: 'Chico, o Yorkshire', desc: 'Companheiro fiel, corajoso e super brincalhão. Tem pelos sedosos dourados e cinzas, ama correr atrás da sua bolinha rosa favorita e tem o maior coração do mundo!', img: chicoMascot, color: 'border-falla-green' },
-                          { id: 'lico', name: 'Lico, o Leãozinho', desc: 'Corajoso e entusiasmado, ruge de felicidade com suas conquistas.', img: licoMascot, color: 'border-falla-orange' },
-                          { id: 'teddy', name: 'Teddy, o Ursinho', desc: 'Calmo, fofinho e acolhedor, auxilia na hora das dúvidas difíceis.', img: teddyMascot, color: 'border-falla-blue' },
-                          { id: 'luna', name: 'Luna, a Coruja', desc: 'Altamente inteligente e sábia, ama ler livros e desvendar mistérios.', img: lunaMascot, color: 'border-falla-pink' },
-                        ].map((m) => {
-                          const isSelected = userProgress.avatarMascot === m.id;
-                          return (
-                            <div 
-                              key={m.id}
-                              onClick={() => {
-                                setUserProgress(prev => ({ ...prev, avatarMascot: m.id }));
-                              }}
-                              className={`bg-slate-50 border-2 rounded-2xl p-4 text-center cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] flex flex-col justify-between ${
-                                isSelected ? `${m.color} bg-white shadow-md ring-2 ring-opacity-25 ring-offset-2` : 'border-slate-200'
-                              }`}
-                            >
-                              <div className="space-y-3">
-                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-200 mx-auto bg-white flex items-center justify-center">
-                                  <img src={m.img} alt={m.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-                                </div>
-                                <div className="space-y-1">
-                                  <h5 className="text-xs font-black text-slate-800">{m.name}</h5>
-                                  <p className="text-[10px] font-bold text-slate-400 leading-normal">{m.desc}</p>
-                                </div>
-                              </div>
-                              <div className="pt-3">
-                                {isSelected ? (
-                                  <span className="inline-flex items-center gap-1 bg-falla-green text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">
-                                    <Check size={10} /> Selecionado
-                                  </span>
-                                ) : (
-                                  <span className="inline-block bg-slate-200 text-slate-500 text-[10px] font-black px-3 py-1 rounded-full uppercase hover:bg-slate-300">
-                                    Usar Avatar
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Choose Profile Banner Grid */}
-                    <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4">
-                      <div>
-                        <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
-                          <span>🎨</span> Capa de Perfil (Estilo Discord)
-                        </h4>
-                        <p className="text-[11px] text-slate-400 font-bold">
-                          Personalize seu perfil com um banner elegante! Banners bloqueados podem ser comprados usando suas moedas de recompensa.
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {PROFILE_BANNERS.map((banner) => {
-                          const isUnlocked = (userProgress.unlockedBanners || []).includes(banner.id) || banner.unlockedByDefault;
-                          const isActive = userProgress.activeBanner === banner.id;
-                          const canAfford = (userProgress.coins || 0) >= banner.price;
-
-                          return (
-                            <div 
-                              key={banner.id}
-                              onClick={() => {
-                                if (isUnlocked) {
-                                  setUserProgress(prev => ({ ...prev, activeBanner: banner.id }));
-                                } else {
-                                  if (!canAfford) {
-                                    alert(`Você não tem moedas suficientes para comprar o banner "${banner.name}". Complete mais lições para ganhar moedas!`);
-                                    return;
-                                  }
-                                  const confirmPurchase = window.confirm(`Deseja comprar o banner "${banner.name}" por ${banner.price} moedas?`);
-                                  if (confirmPurchase) {
-                                    setUserProgress(prev => ({
-                                      ...prev,
-                                      coins: Math.max(0, (prev.coins || 0) - banner.price),
-                                      unlockedBanners: [...(prev.unlockedBanners || []), banner.id],
-                                      activeBanner: banner.id
-                                    }));
-                                    alert(`Sucesso! Você comprou e equipou o banner "${banner.name}"!`);
-                                  }
-                                }
-                              }}
-                              className={`bg-slate-50 border-2 rounded-2xl p-4 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] flex flex-col justify-between space-y-3 ${
-                                isActive ? 'border-falla-blue bg-white shadow-md ring-2 ring-opacity-25 ring-offset-2' : 'border-slate-200'
-                              } ${!isUnlocked ? 'opacity-85' : ''}`}
-                            >
-                              <div className="space-y-2">
-                                {/* Banner Preview */}
-                                <div 
-                                  style={{ background: banner.imageUrl }} 
-                                  className="h-16 w-full rounded-xl shadow-xs border border-slate-100 flex items-center justify-center relative overflow-hidden"
-                                >
-                                  {!isUnlocked && (
-                                    <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center">
-                                      <span className="bg-slate-900/80 text-white p-1.5 rounded-full">
-                                        <Lock size={14} />
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="flex justify-between items-center">
-                                  <h5 className="text-xs font-black text-slate-800">{banner.name}</h5>
-                                  {!isUnlocked && (
-                                    <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 flex items-center gap-1">
-                                      <GoldCoinIcon className="w-3.5 h-3.5" /> {banner.price}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              <div className="pt-1 text-center">
-                                {isActive ? (
-                                  <span className="inline-flex items-center gap-1 bg-falla-blue text-white text-[10px] font-black px-3 py-1 rounded-full uppercase">
-                                    <Check size={10} /> Ativo
-                                  </span>
-                                ) : isUnlocked ? (
-                                  <span className="inline-block bg-slate-200 text-slate-500 text-[10px] font-black px-3 py-1 rounded-full uppercase hover:bg-slate-300">
-                                    Equipar
-                                  </span>
-                                ) : (
-                                  <span className={`inline-block text-[10px] font-black px-3 py-1 rounded-full uppercase ${
-                                    canAfford ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                                  }`}>
-                                    Comprar Banner
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 7. LOJA VIEW */}
-                {activeTab === 'shop' && (
-                  <div className="space-y-6 animate-fade-in">
-                    {/* Loja Coin balance banner */}
-                    <div className="bg-gradient-to-r from-amber-400 to-amber-500 text-slate-900 rounded-3xl p-6 shadow-md border-b-4 border-amber-600 flex flex-col sm:flex-row items-center justify-between gap-4 animate-fade-in">
-                      <div className="space-y-1">
-                        <span className="bg-slate-900/10 text-slate-900 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-slate-900/15">
-                          Troque suas Moedas por Vantagens! 🪙
-                        </span>
-                        <h3 className="text-xl font-black tracking-tight flex items-center gap-2">
-                          <span>🏪</span> Loja de Recompensas Falla
-                        </h3>
-                        <p className="text-xs font-bold text-amber-950 leading-relaxed max-w-lg">
-                          Use suas Moedas de Sorte acumuladas completando lições para adquirir poções mágicas e poderes especiais!
-                        </p>
-                      </div>
-
-                      <div className="bg-slate-900/10 px-5 py-3 rounded-2xl border border-slate-900/10 flex items-center gap-2.5 text-center">
-                        <GoldCoinIcon className="w-10 h-10 animate-bounce shrink-0" />
-                        <div>
-                          <span className="block text-xl font-black">{userProgress.coins || 0}</span>
-                          <span className="text-[9px] font-extrabold uppercase tracking-wide">Suas Moedas</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      {/* Buy Store Items Section */}
-                      <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4">
-                        <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
-                          <span>🧪</span> Poções & Vantagens Especiais
-                        </h4>
-                        
-                        <div className="space-y-3">
-                          {[
-                            { id: 'xp_boost', name: 'Poção de Super XP', desc: 'Consuma para receber instantaneamente +50 XP extras na sua conta!', cost: 20, icon: '🧪', benefit: '+50 XP' },
-                            { id: 'extra_life', name: 'Kit de Vida Extra', desc: 'Recarrega 1 vida para que você continue estudando sem parar!', cost: 10, icon: '❤️', benefit: '+1 Vida' },
-                            { id: 'streak_shield', name: 'Escudo Protetor', desc: 'Protege e mantém sua ofensiva diária ativa por mais 1 dia!', cost: 30, icon: '🛡️', benefit: 'Proteção' },
-                            { id: 'name_card', name: 'Cartão de Alteração de Nome', desc: 'Permite alterar seu nome de usuário no seu Perfil!', cost: 15, icon: '🏷️', benefit: 'Item Especial' },
-                          ].map((item) => {
-                            const canAfford = (userProgress.coins || 0) >= item.cost;
-                            return (
-                              <div key={item.id} className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-3">
-                                  <span className="text-3xl bg-white w-12 h-12 rounded-xl flex items-center justify-center border-2 border-slate-150 shadow-2xs shrink-0">{item.icon}</span>
-                                  <div>
-                                    <div className="flex items-center gap-1.5">
-                                      <h5 className="text-xs font-black text-slate-800">{item.name}</h5>
-                                      <span className="bg-amber-100 text-amber-800 text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full">{item.benefit}</span>
-                                    </div>
-                                    <p className="text-[10px] font-bold text-slate-400 leading-normal mt-0.5">{item.desc}</p>
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    if (!canAfford) {
-                                      alert('Moedas insuficientes! Complete mais lições para ganhar moedas!');
-                                      return;
-                                    }
-                                    
-                                    setUserProgress(prev => {
-                                      let newXp = prev.xp;
-                                      let newLives = prev.lives;
-                                      let newCoins = (prev.coins || 0) - item.cost;
-                                      let newLevel = prev.level;
-                                      let nameChangeCards = prev.nameChangeCards || 0;
-                                      
-                                      if (item.id === 'xp_boost') {
-                                        newXp += 50;
-                                        if (newXp >= 100) {
-                                          newXp = newXp - 100;
-                                          newLevel += 1;
-                                        }
-                                      } else if (item.id === 'extra_life') {
-                                        newLives = Math.min(prev.lives + 1, 5);
-                                      } else if (item.id === 'name_card') {
-                                        nameChangeCards += 1;
-                                      }
-                                      
-                                      return {
-                                        ...prev,
-                                        xp: newXp,
-                                        lives: newLives,
-                                        coins: newCoins,
-                                        level: newLevel,
-                                        nameChangeCards: nameChangeCards
-                                      };
-                                    });
-                                    alert(`Sucesso! Você comprou: ${item.name}!`);
-                                  }}
-                                  className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer shadow-sm shrink-0 border-b-4 uppercase flex items-center gap-1 ${
-                                    canAfford 
-                                      ? 'bg-amber-400 hover:bg-amber-300 text-slate-900 border-b-amber-600 active:translate-y-0.5' 
-                                      : 'bg-slate-200 text-slate-400 border-b-slate-300 cursor-not-allowed'
-                                  }`}
-                                >
-                                  <span className="flex items-center gap-1">
-                                    <GoldCoinIcon className="w-4.5 h-4.5" />
-                                    <span>{item.cost}</span>
-                                  </span>
-                                </button>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Coin Packages Section */}
-                      <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4">
-                        <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
-                          <span>💳</span> Recarregar Moedas (Compra Simulada)
-                        </h4>
-                        <p className="text-[11px] text-slate-400 font-bold leading-normal">
-                          Acabaram as suas moedas? Adquira pacotes de moedas simulados de forma divertida para testar a integração de pagamentos!
-                        </p>
-
-                        <div className="space-y-3">
-                          {[
-                            { id: 'pack_100', name: 'Saco de 100 Moedas', price: 'R$ 9,90', coins: 100, icon: '💰', popular: false },
-                            { id: 'pack_500', name: 'Baú de 500 Moedas', price: 'R$ 29,90', coins: 500, icon: '📦', popular: true },
-                          ].map((pack) => (
-                            <div key={pack.id} className={`border-2 rounded-2xl p-4 flex items-center justify-between gap-4 relative ${pack.popular ? 'border-amber-400 bg-amber-50/20' : 'border-slate-200 bg-slate-50'}`}>
-                              {pack.popular && (
-                                <span className="absolute -top-2.5 right-4 bg-amber-400 text-slate-900 text-[8px] font-black uppercase px-2 py-0.5 rounded-full shadow-2xs">
-                                  Mais Vendido ★
-                                </span>
-                              )}
-                              <div className="flex items-center gap-3">
-                                <span className="text-3xl bg-white w-12 h-12 rounded-xl flex items-center justify-center border-2 border-slate-150 shadow-2xs shrink-0">{pack.icon}</span>
-                                <div>
-                                  <h5 className="text-xs font-black text-slate-800">{pack.name}</h5>
-                                  <p className="text-[10px] font-bold text-slate-400 leading-normal mt-0.5">Adiciona +{pack.coins} moedas de sorte à sua conta</p>
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => {
-                                  setUserProgress(prev => ({
-                                    ...prev,
-                                    coins: (prev.coins || 0) + pack.coins
-                                  }));
-                                  alert(`Compra Simulada de ${pack.name} efetuada com sucesso! Adicionado +${pack.coins} moedas!`);
-                                }}
-                                className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-black border-b-4 border-b-slate-950 active:translate-y-0.5 transition-all cursor-pointer uppercase"
-                              >
-                                {pack.price}
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* 8. PLANOS DE ASSINATURA VIEW */}
-                {activeTab === 'plans' && (
-                  <div className="space-y-6 animate-fade-in">
-                    {!checkoutPlan ? (
-                      <>
-                        {/* Plans Hero Banner */}
-                        <div className="bg-gradient-to-r from-falla-pink to-purple-600 text-white rounded-3xl p-6 md:p-8 shadow-md border-b-4 border-purple-700 flex flex-col md:flex-row items-center justify-between gap-6 animate-fade-in">
-                          <div className="space-y-2">
-                            <span className="bg-white/25 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full border border-white/10">
-                              Eleve Seus Estudos ao Máximo! ⭐
-                            </span>
-                            <h2 className="text-2xl md:text-3xl font-black tracking-tight">
-                              Seja Membro Falla Premium 👑
-                            </h2>
-                            <p className="text-xs md:text-sm font-bold text-purple-100 leading-relaxed max-w-xl">
-                              Remova todos os obstáculos e aprenda inglês e espanhol muito mais rápido com lições geradas ilimitadamente pela Inteligência Artificial do Gemini!
-                            </p>
-                          </div>
-                          
-                          <div className="bg-white/10 p-4 rounded-2xl border border-white/10 shrink-0 text-center max-w-xs self-stretch md:self-center">
-                            <span className="block text-3xl font-black">👑</span>
-                            <span className="block text-xs font-black uppercase tracking-wide text-falla-yellow mt-1">Super Benefícios</span>
-                            <span className="text-[10px] text-purple-200 font-bold leading-normal">Infinitos corações, sem anúncios e muito mais!</span>
-                          </div>
-                        </div>
-
-                        {/* Plan Comparison Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-                          {/* Plano Free Card */}
-                          <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-2xs space-y-4 flex flex-col justify-between relative">
-                            <div className="space-y-4">
-                              <div className="space-y-1">
-                                <span className="bg-slate-100 text-slate-500 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
-                                  Básico
-                                </span>
-                                <h4 className="text-base font-black text-slate-800">Falla Gratuito</h4>
-                                <p className="text-xl font-black text-slate-700">R$ 0 <span className="text-xs text-slate-400 font-bold">/ sempre</span></p>
-                              </div>
-                              <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
-                                Plano padrão com recursos básicos essenciais para começar sua jornada linguística de forma descontraída.
-                              </p>
-                              <div className="h-px bg-slate-100" />
-                              <ul className="space-y-2 text-[11px] font-bold text-slate-600">
-                                <li className="flex items-center gap-2">❌ Limite de 5 vidas diárias</li>
-                                <li className="flex items-center gap-2">❌ Anúncios ocasionais entre lições</li>
-                                <li className="flex items-center gap-2">❌ Apenas 3 consultas ao Tutor de IA</li>
-                                <li className="flex items-center gap-2">✔️ Acesso completo aos caminhos básicos</li>
-                              </ul>
-                            </div>
-                            
-                            <div className="pt-6">
-                              {userProgress.plan !== 'premium' ? (
-                                <button className="w-full bg-slate-100 text-slate-500 font-black text-xs py-3 rounded-xl border border-slate-200 cursor-not-allowed uppercase" disabled>
-                                  Plano Atual Ativo
-                                </button>
-                              ) : (
-                                <button 
-                                  onClick={() => {
-                                    setUserProgress(prev => ({ ...prev, plan: 'free' }));
-                                    alert('Você alterou seu plano para o Gratuito.');
-                                  }}
-                                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-black text-xs py-3 rounded-xl border border-slate-200 cursor-pointer uppercase transition-all"
-                                >
-                                  Mudar para Gratuito
-                                </button>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Plano Premium Card */}
-                          <div className="bg-white border-4 border-falla-pink rounded-3xl p-6 shadow-md space-y-4 flex flex-col justify-between relative">
-                            <span className="absolute -top-3.5 right-6 bg-falla-pink text-white text-[9px] font-black uppercase tracking-wider px-3 py-1 rounded-full shadow-sm">
-                              Mais Recomendado ★
-                            </span>
-                            <div className="space-y-4">
-                              <div className="space-y-1">
-                                <span className="bg-purple-100 text-falla-pink text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase">
-                                  Completo & Ilimitado
-                                </span>
-                                <h4 className="text-base font-black text-slate-800">Falla Premium</h4>
-                                <p className="text-xl font-black text-falla-pink">R$ 14,90 <span className="text-xs text-slate-400 font-bold">/ mensal</span></p>
-                              </div>
-                              <p className="text-[11px] text-slate-400 font-bold leading-relaxed">
-                                Desbloqueie todo o poder de aprendizado da Falla. Ideal para estudantes dedicados que buscam fluência rápida.
-                              </p>
-                              <div className="h-px bg-slate-100" />
-                              <ul className="space-y-2 text-[11px] font-bold text-slate-600">
-                                <li className="flex items-center gap-2">💚 Vidas infinitas para treinar sem parar</li>
-                                <li className="flex items-center gap-2">🚫 Zero anúncios para total foco</li>
-                                <li className="flex items-center gap-2">🧠 Tutor de IA (Gemini) 100% ILIMITADO</li>
-                                <li className="flex items-center gap-2">👑 Distintivo Dourado de Membro Fundador</li>
-                              </ul>
-                            </div>
-                            
-                            <div className="pt-6">
-                              {userProgress.plan === 'premium' ? (
-                                <button className="w-full bg-falla-green text-white font-black text-xs py-3 rounded-xl border-b-4 border-b-emerald-600 cursor-not-allowed uppercase flex items-center justify-center gap-1.5" disabled>
-                                  <Check size={14} /> Assinatura Ativa
-                                </button>
-                              ) : (
-                                <button 
-                                  onClick={() => setCheckoutPlan({ id: 'premium_monthly', name: 'Assinatura Falla Premium Mensal', price: 'R$ 14,90 / mês' })}
-                                  className="w-full bg-falla-pink hover:bg-falla-pink/90 text-white font-black text-xs py-3 rounded-xl border-b-4 border-b-purple-600 hover:scale-[1.01] active:translate-y-0.5 transition-all cursor-pointer uppercase flex items-center justify-center gap-1"
-                                >
-                                  Assinar Falla Premium
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      /* Interactive Simulation Billing screen */
-                      <div className="max-w-md mx-auto bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-xl space-y-6 animate-fade-in">
-                        <div className="flex items-center justify-between border-b pb-4">
-                          <div>
-                            <h4 className="text-sm font-black text-slate-800">Checkout Seguro Simulado</h4>
-                            <p className="text-[10px] text-slate-400 font-bold">Teste nosso fluxo de pagamento de forma segura!</p>
-                          </div>
-                          <button 
-                            onClick={() => setCheckoutPlan(null)}
-                            className="text-slate-400 hover:text-slate-600 font-extrabold text-xs uppercase cursor-pointer"
-                          >
-                            Cancelar
-                          </button>
-                        </div>
-
-                        {/* Order Summary banner */}
-                        <div className="bg-slate-50 border border-slate-150 p-4 rounded-2xl flex justify-between items-center">
-                          <div>
-                            <p className="text-xs font-black text-slate-700">{checkoutPlan.name}</p>
-                            <p className="text-[10px] text-slate-400 font-bold">Cobrança Mensal Recorrente</p>
-                          </div>
-                          <p className="text-sm font-black text-falla-pink">{checkoutPlan.price}</p>
-                        </div>
-
-                        {/* Simulated Credit card fields */}
-                        <form onSubmit={(e) => {
-                          e.preventDefault();
-                          setUserProgress(prev => ({ ...prev, plan: 'premium' }));
-                          setCheckoutPlan(null);
-                          alert('Parabéns! Sua Assinatura Falla Premium foi ativada com sucesso! Você agora tem corações infinitos, zero anúncios e tutor inteligente liberado!');
-                        }} className="space-y-4">
-                          <div>
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Nome no Cartão</label>
-                            <input 
-                              type="text" 
-                              required
-                              placeholder="Ex: JOÃO DA SILVA" 
-                              className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 uppercase outline-none"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Número do Cartão de Crédito</label>
-                            <input 
-                              type="text" 
-                              required
-                              maxLength={19}
-                              placeholder="4000 1234 5678 9010" 
-                              className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 outline-none"
-                            />
-                          </div>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Validade</label>
-                              <input 
-                                type="text" 
-                                required
-                                maxLength={5}
-                                placeholder="MM/AA" 
-                                className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 outline-none text-center"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">CVC / Código</label>
-                              <input 
-                                type="text" 
-                                required
-                                maxLength={4}
-                                placeholder="123" 
-                                className="w-full bg-slate-50 border-2 border-slate-200 rounded-xl p-2.5 text-xs font-bold text-slate-700 outline-none text-center"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="bg-blue-50 border border-blue-150 p-3 rounded-2xl text-[10px] text-blue-800 leading-normal font-bold">
-                            🔒 <strong>Ambiente de Sandbox Seguro:</strong> Nenhuma cobrança real será feita no seu cartão de crédito. Este é um checkout simulado de alta fidelidade.
-                          </div>
-
-                          <button
-                            type="submit"
-                            className="w-full bg-falla-green hover:bg-falla-green/90 text-white font-black text-xs py-3.5 rounded-xl border-b-4 border-b-emerald-600 hover:scale-[1.01] active:translate-y-0.5 transition-all cursor-pointer uppercase flex items-center justify-center gap-1.5"
-                          >
-                            Confirmar Pagamento Simulado
-                          </button>
-                        </form>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* 9. LEADERBOARD VIEW */}
-                {activeTab === 'leaderboard' && (
-                  <div className="max-w-2xl mx-auto animate-fade-in pb-12">
-                    <Leaderboard 
-                      userXp={userProgress.xp} 
-                      userStreak={userProgress.streak}
-                      userState={userProgress.state}
-                      userCountry={userProgress.country}
-                    />
-                  </div>
-                )}
-
-                {/* 10. MAIS ATIVIDADES VIEW */}
-                {activeTab === 'more' && (
-                  <div className="space-y-6 animate-fade-in max-w-4xl mx-auto pb-12">
-                    <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-2xs">
-                      <h2 className="text-xl font-black text-slate-800 flex items-center gap-2">
-                        <span>✨</span> Mais Atividades & Recursos
-                      </h2>
-                      <p className="text-xs text-slate-500 font-bold mt-1 uppercase tracking-wider">
-                        Explore os incríveis recursos de gamificação e aprendizado inteligente do FALLA!
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {/* A. Tutor de IA */}
-                      <div 
-                        onClick={() => setActiveTab('ai-tutor')}
-                        className="bg-white border-2 border-slate-200 hover:border-falla-blue rounded-3xl p-6 shadow-xs hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group"
-                      >
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="w-12 h-12 bg-sky-100 group-hover:bg-falla-blue text-falla-blue group-hover:text-white rounded-2xl flex items-center justify-center text-2xl transition-colors duration-300 shadow-2xs font-bold">
-                            🧠
-                          </div>
-                          <span className="text-[10px] bg-sky-50 text-falla-blue font-black px-2 py-0.5 rounded-full">GERADOR INTELIGENTE</span>
-                        </div>
-                        <h4 className="text-base font-black text-slate-800 group-hover:text-falla-blue transition-colors">Tutor de IA</h4>
-                        <p className="text-[11px] text-slate-400 mt-1.5 font-bold leading-normal">
-                          Peça para a inteligência artificial do Gemini criar uma lição inteiramente nova e jogável sobre qualquer tema em segundos!
-                        </p>
-                      </div>
-
-                      {/* B. Nossos Mascotes */}
-                      <div 
-                        onClick={() => setActiveTab('mascots')}
-                        className="bg-white border-2 border-slate-200 hover:border-falla-pink rounded-3xl p-6 shadow-xs hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group"
-                      >
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="w-12 h-12 bg-purple-100 group-hover:bg-falla-pink text-falla-pink group-hover:text-white rounded-2xl flex items-center justify-center text-2xl transition-colors duration-300 shadow-2xs font-bold">
-                            🦉
-                          </div>
-                          <span className="text-[10px] bg-purple-50 text-falla-pink font-black px-2 py-0.5 rounded-full">CONHEÇA O SQUAD</span>
-                        </div>
-                        <h4 className="text-base font-black text-slate-800 group-hover:text-falla-pink transition-colors">Nossos Mascotes</h4>
-                        <p className="text-[11px] text-slate-400 mt-1.5 font-bold leading-normal">
-                          Conheça os simpáticos e sábios guias virtuais da Falla que auxiliam as crianças no aprendizado e explicam suas lições!
-                        </p>
-                      </div>
-
-                      {/* C. Painel Admin */}
-                      <div 
-                        onClick={() => setActiveTab('admin')}
-                        className="bg-white border-2 border-slate-200 hover:border-falla-orange rounded-3xl p-6 shadow-xs hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group"
-                      >
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="w-12 h-12 bg-amber-100 group-hover:bg-falla-orange text-falla-orange group-hover:text-white rounded-2xl flex items-center justify-center text-2xl transition-colors duration-300 shadow-2xs font-bold">
-                            ⚙️
-                          </div>
-                          <span className="text-[10px] bg-amber-50 text-falla-orange font-black px-2 py-0.5 rounded-full">CONFIGURAÇÕES</span>
-                        </div>
-                        <h4 className="text-base font-black text-slate-800 group-hover:text-falla-orange transition-colors">Painel Admin</h4>
-                        <p className="text-[11px] text-slate-400 mt-1.5 font-bold leading-normal">
-                          Gerencie cursos, regras do aplicativo, dicas de estudos, textos dinâmicos de interface e configurações da API de IA.
-                        </p>
-                      </div>
-
-                      {/* D. Arquitetura & Stack */}
-                      <div 
-                        onClick={() => setActiveTab('architecture')}
-                        className="bg-white border-2 border-slate-200 hover:border-falla-yellow rounded-3xl p-6 shadow-xs hover:shadow-md cursor-pointer transition-all hover:-translate-y-1 group"
-                      >
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="w-12 h-12 bg-yellow-100 group-hover:bg-falla-yellow text-slate-900 group-hover:text-slate-900 rounded-2xl flex items-center justify-center text-2xl transition-colors duration-300 shadow-2xs font-bold">
-                            🏛️
-                          </div>
-                          <span className="text-[10px] bg-yellow-50 text-amber-700 font-black px-2 py-0.5 rounded-full">TECNICO & INFRA</span>
-                        </div>
-                        <h4 className="text-base font-black text-slate-800 group-hover:text-falla-yellow transition-colors">Arquitetura & Stack</h4>
-                        <p className="text-[11px] text-slate-400 mt-1.5 font-bold leading-normal">
-                          Veja o plano detalhado de engenharia, arquitetura de banco, segurança de dados LGPD e o fluxo de publicação oficial.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </>
             )}
 
@@ -2490,112 +1272,9 @@ export default function App() {
       </div>
 
       {/* Footer credits */}
-      <footer className="bg-white border-t border-slate-200 py-4 px-4 text-center text-[10px] text-slate-400 font-semibold tracking-wide mt-auto mb-16">
+      <footer className="bg-white border-t border-slate-200 py-4 px-4 text-center text-[10px] text-slate-400 font-semibold tracking-wide mt-auto">
         {interfaceTexts.app_footer || "FALLA App Co. © 2026. Feito com tecnologia React Native e IA para democratizar o aprendizado de idiomas de forma divertida."}
       </footer>
-
-      {/* Fixed bottom navigation (Duolingo style) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t-2 border-slate-200 shadow-xl py-2 px-4 flex justify-around items-center select-none pb-safe">
-        {[
-          { id: 'home', label: 'Início', icon: Home, color: 'text-falla-green' },
-          { id: 'shop', label: 'Loja', icon: Gift, color: 'text-amber-500' },
-          { id: 'leaderboard', label: 'Ranking', icon: Trophy, color: 'text-falla-yellow' },
-          { id: 'profile', label: 'Perfil', icon: User, color: 'text-falla-blue' },
-          { id: 'more', label: 'Mais', icon: Menu, color: 'text-falla-pink' },
-        ].map((item) => {
-          const isActive = activeTab === item.id;
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id as any)}
-              className={`flex flex-col items-center justify-center py-1 px-3 rounded-2xl transition-all cursor-pointer ${
-                isActive 
-                  ? 'bg-slate-100/80 scale-105' 
-                  : 'hover:bg-slate-50'
-              }`}
-            >
-              <Icon 
-                size={22} 
-                className={`transition-colors duration-200 ${
-                  isActive ? `${item.color} stroke-[3.5]` : 'text-slate-400 stroke-[2]'
-                }`} 
-              />
-              <span 
-                className={`text-[9px] font-black uppercase tracking-wider mt-1 transition-colors duration-200 ${
-                  isActive ? 'text-slate-800' : 'text-slate-400'
-                }`}
-              >
-                {item.label}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Edit Username Modal */}
-      {isEditNameModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in">
-          <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 shadow-xl max-w-sm w-full space-y-4 relative animate-scale-up">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h4 className="text-base font-black text-slate-800 flex items-center gap-2">
-                <span>🏷️</span> Alterar Nome
-              </h4>
-              <button 
-                onClick={() => setIsEditNameModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 font-extrabold text-xs uppercase cursor-pointer"
-              >
-                Cancelar
-              </button>
-            </div>
-
-            <div className="bg-slate-50 border border-slate-150 p-3.5 rounded-2xl space-y-1 text-xs">
-              <div className="flex justify-between items-center text-[10px] font-black text-slate-500 uppercase tracking-wider">
-                <span>Método Disponível:</span>
-                {!userProgress.hasUsedFreeNameChange ? (
-                  <span className="text-falla-green font-black">Gratuito (1 Restante)</span>
-                ) : (
-                  <span className="text-amber-600 font-black">Cartão de Nome ({userProgress.nameChangeCards || 0} Disponíveis)</span>
-                )}
-              </div>
-              <p className="text-[10px] font-bold text-slate-400 leading-normal">
-                {!userProgress.hasUsedFreeNameChange 
-                  ? "Você tem direito a uma troca de nome gratuita na sua conta!" 
-                  : "Sua troca gratuita já foi utilizada. Cada nova alteração consome 1 Cartão de Alteração de Nome."}
-              </p>
-            </div>
-
-            <form onSubmit={handleConfirmNameChange} className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-black text-slate-500 uppercase tracking-wider mb-1">Novo Nome de Usuário</label>
-                <input 
-                  type="text" 
-                  required
-                  value={tempNewName}
-                  onChange={(e) => setTempNewName(e.target.value)}
-                  placeholder="Seu novo nome" 
-                  maxLength={20}
-                  className="w-full bg-slate-50 border-2 border-slate-200 focus:border-falla-blue rounded-xl p-2.5 text-xs font-bold text-slate-700 outline-none transition-all"
-                />
-                <p className="text-[9px] font-bold text-slate-400 mt-1">Entre 3 e 20 caracteres.</p>
-              </div>
-
-              {nameChangeError && (
-                <p className="text-[11px] font-black text-falla-red leading-normal bg-red-50 p-2.5 rounded-xl border border-red-150">
-                  ⚠️ {nameChangeError}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                className="w-full bg-falla-blue hover:bg-falla-blue/90 text-white font-black text-xs py-3 rounded-xl border-b-4 border-b-sky-700 hover:scale-[1.01] active:translate-y-0.5 transition-all cursor-pointer uppercase flex items-center justify-center gap-1"
-              >
-                Confirmar Alteração
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
 
     </div>
   );
