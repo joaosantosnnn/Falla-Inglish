@@ -26,6 +26,10 @@ npm run cap:sync
 🤖 Abrir no Android Studio
 npm run cap:open-android
 
+npm run build
+npm run cap:sync
+npm run cap:open-android
+
 
 📤 Enviar mudanças pro GitHub (dispara build automático do APK)
 git add .

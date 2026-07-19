@@ -59,3 +59,52 @@
   font-weight: bold;
   overflow: hidden;
 }
+
+/* Horizontal scroll prevention and mobile viewport improvements */
+html, body, #root {
+  max-width: 100vw;
+  width: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+}
+
+.pb-safe {
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+:root {
+  --theme-card-bg: #ffffff;
+  --theme-bg: #f8fafc;
+  --theme-text: #1e293b;
+  --theme-border: #e2e8f0;
+}
+
+/* Dynamic theme overrides to support seamless live switching of dark/warm/pastel themes */
+.bg-white {
+  background-color: var(--theme-card-bg, #ffffff) !important;
+}
+
+.bg-slate-50 {
+  background-color: var(--theme-bg, #f8fafc) !important;
+}
+
+.text-slate-800 {
+  color: var(--theme-text, #1e293b) !important;
+}
+
+.text-slate-700 {
+  color: var(--theme-text, #334155) !important;
+}
+
+.border-slate-200, .border-slate-150, .border-slate-100 {
+  border-color: var(--theme-border, #e2e8f0) !important;
+}
+

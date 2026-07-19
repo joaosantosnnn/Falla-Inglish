@@ -2,10 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Lesson, Question, QuestionType } from '../types';
 import { supabase } from '../lib/supabaseClient';
 import { motion, AnimatePresence } from 'motion/react';
+import GoldCoinIcon from './GoldCoinIcon';
+import { ClosedChest, OpenedChest } from './MagicChest';
 
 import licoMascot from '../assets/images/lico_mascot_1784292046285.jpg';
 import teddyMascot from '../assets/images/teddy_mascot_1784292056581.jpg';
 import lunaMascot from '../assets/images/luna_mascot_1784292067117.jpg';
+import chicoMascot from '../assets/images/chico_mascot_flat_vector_1784399850056.jpg';
 import { 
   Heart, Trophy, CheckCircle, XCircle, ArrowRight, Sparkles, 
   HelpCircle, Volume2, Mic, RotateCcw, MessageSquare, Lightbulb 
@@ -18,9 +21,22 @@ interface LessonPlayerProps {
   onCancel: () => void;
   userXp: number;
   userLevel: number;
+  userLives: number;
+  userPlan: string;
+  onLoseLife: () => void;
 }
 
-export default function LessonPlayer({ lesson, courseLanguage, onComplete, onCancel, userXp, userLevel }: LessonPlayerProps) {
+export default function LessonPlayer({ 
+  lesson, 
+  courseLanguage, 
+  onComplete, 
+  onCancel, 
+  userXp, 
+  userLevel,
+  userLives,
+  userPlan,
+  onLoseLife
+}: LessonPlayerProps) {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedOpt, setSelectedOpt] = useState<string | null>(null);
   
@@ -30,7 +46,9 @@ export default function LessonPlayer({ lesson, courseLanguage, onComplete, onCan
 
   const [hasChecked, setHasChecked] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [lives, setLives] = useState(5);
+  
+  const isPremium = userPlan === 'premium';
+  const [lives, setLives] = useState(isPremium ? 999999 : userLives);
   const [completed, setCompleted] = useState(false);
   const [xpEarned, setXpEarned] = useState(0);
 
@@ -147,7 +165,10 @@ export default function LessonPlayer({ lesson, courseLanguage, onComplete, onCan
     if (userAnsCorrect) {
       setXpEarned(prev => prev + 5);
     } else {
-      setLives(prev => Math.max(0, prev - 1));
+      if (!isPremium) {
+        setLives(prev => Math.max(0, prev - 1));
+        onLoseLife();
+      }
     }
   };
 
@@ -180,7 +201,7 @@ export default function LessonPlayer({ lesson, courseLanguage, onComplete, onCan
       if (error) throw error;
       setAiExplanation(data?.explanation || "Não recebemos uma resposta válida do tutor de IA.");
     } catch (e: any) {
-      console.error(e);
+      console.warn("Erro ao buscar explicação do tutor de IA:", e);
       setAiExplanation("Não foi possível conectar com o tutor de IA no Supabase. Verifique sua conexão ou se a chave API está configurada nas Edge Functions!");
     } finally {
       setAiLoading(false);
@@ -191,6 +212,7 @@ export default function LessonPlayer({ lesson, courseLanguage, onComplete, onCan
     if (name === "Lico") return licoMascot;
     if (name === "Teddy") return teddyMascot;
     if (name === "Luna") return lunaMascot;
+    if (name === "Chico" || name === "Chico, o Yorkshire" || name === "Chico Yorkshire") return chicoMascot;
     return null;
   };
 
@@ -198,6 +220,7 @@ export default function LessonPlayer({ lesson, courseLanguage, onComplete, onCan
     if (name === "Lico") return "📖";
     if (name === "Teddy") return "🧸";
     if (name === "Luna") return "🦉";
+    if (name === "Chico" || name === "Chico, o Yorkshire" || name === "Chico Yorkshire") return "🐶";
     if (name === "Bia") return "👧";
     if (name === "Guga") return "👦";
     if (name === "Pingo") return "🐧";
@@ -232,20 +255,20 @@ export default function LessonPlayer({ lesson, courseLanguage, onComplete, onCan
         {/* Chest Visual Container */}
         <div className="h-44 flex items-center justify-center relative">
           {/* Outer glow effect */}
-          <div className={`absolute w-32 h-32 rounded-full blur-xl transition-all duration-1000 ${
+          <div className={`absolute w-36 h-36 rounded-full blur-xl transition-all duration-1000 ${
             chestState === 'opened' ? 'bg-falla-yellow/40 scale-125 animate-pulse' : 'bg-falla-blue/20'
           }`} />
 
           <motion.div
             key={chestState}
-            className="text-8xl select-none cursor-pointer filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.5)]"
+            className="select-none cursor-pointer"
             animate={chestState === 'opening' ? {
-              rotate: [0, -12, 12, -12, 12, -8, 8, -4, 4, 0],
+              rotate: [0, -10, 10, -10, 10, -8, 8, -4, 4, 0],
               scale: [1, 1.15, 1.15, 1.15, 1.15, 1.15, 1.15, 1.15, 1.15, 1],
               transition: { duration: 1.5, repeat: Infinity }
             } : chestState === 'opened' ? {
-              scale: [1, 1.3, 1],
-              rotate: [0, 10, -10, 0],
+              scale: [1, 1.25, 1],
+              rotate: [0, 5, -5, 0],
               transition: { duration: 0.6 }
             } : {
               scale: [1, 1.05, 1],
@@ -257,16 +280,16 @@ export default function LessonPlayer({ lesson, courseLanguage, onComplete, onCan
               }
             }}
           >
-            {chestState === 'closed' && '📦'}
-            {chestState === 'opening' && '📦'}
-            {chestState === 'opened' && '🔓'}
+            {chestState === 'closed' && <ClosedChest className="w-40 h-40" />}
+            {chestState === 'opening' && <ClosedChest className="w-40 h-40" />}
+            {chestState === 'opened' && <OpenedChest className="w-40 h-40" />}
           </motion.div>
 
           {/* Sparkles on opened state */}
           {chestState === 'opened' && (
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
               <span className="text-2xl absolute -top-4 -left-4 animate-bounce">⭐</span>
-              <span className="text-2xl absolute -bottom-4 -right-4 animate-bounce">🪙</span>
+              <span className="absolute -bottom-4 -right-4 animate-bounce"><GoldCoinIcon className="w-7 h-7" /></span>
               <span className="text-xl absolute top-8 right-0 animate-pulse">✨</span>
               <span className="text-xl absolute bottom-8 left-0 animate-pulse">✨</span>
             </div>
@@ -291,7 +314,7 @@ export default function LessonPlayer({ lesson, courseLanguage, onComplete, onCan
 
               {/* Coins Box */}
               <div className="bg-white/10 border-2 border-indigo-450 p-4 rounded-2xl text-center shadow-md relative overflow-hidden group">
-                <span className="text-2xl block mb-1">🪙</span>
+                <GoldCoinIcon className="w-7 h-7 mx-auto block mb-1" />
                 <span className="text-[10px] text-slate-300 font-extrabold uppercase block tracking-wider">Moedas Sorte</span>
                 <span className="text-2xl font-black text-amber-400">+{randomCoins} Moedas</span>
               </div>
@@ -435,7 +458,7 @@ export default function LessonPlayer({ lesson, courseLanguage, onComplete, onCan
           <div className="flex items-center gap-4 font-black text-sm shrink-0">
             <span className="flex items-center gap-1.5 text-falla-red hover:scale-110 transition-all cursor-pointer" title="Vidas">
               <span className="text-lg">❤️</span>
-              <span>{lives}</span>
+              <span>{isPremium ? '∞ 👑' : lives}</span>
             </span>
             <span className="flex items-center gap-1.5 text-falla-yellow hover:scale-110 transition-all cursor-pointer" title="XP Acumulados">
               <span className="text-lg">⭐</span>

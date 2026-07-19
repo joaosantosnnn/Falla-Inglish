@@ -73,6 +73,23 @@ export interface UserProgress {
   state: string;
   country: string;
   coins: number;
+  avatarMascot?: string;
+  plan?: string;
+  planExpiresAt?: string;
+  lastLifeRegenTime?: number;
+  hasUsedFreeNameChange?: boolean;
+  nameChangeCards?: number;
+  unlockedBanners?: string[];
+  activeBanner?: string;
+}
+
+export interface PushNotification {
+  id: string;
+  title: string;
+  body: string;
+  frequency: 'daily' | 'weekly' | 'once';
+  type: 'ad' | 'reminder';
+  created_at?: string;
 }
 
 export const API_BASE_URL = ((import.meta as any).env?.VITE_API_BASE_URL as string) || '';

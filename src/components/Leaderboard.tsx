@@ -4,13 +4,14 @@ import { supabase } from '../lib/supabaseClient';
 import { Trophy, Globe, MapPin, TrendingUp, Sparkles } from 'lucide-react';
 
 interface LeaderboardProps {
+  userId?: string | null;
   userXp: number;
   userStreak: number;
   userState: string;
   userCountry: string;
 }
 
-export default function Leaderboard({ userXp, userStreak, userState, userCountry }: LeaderboardProps) {
+export default function Leaderboard({ userId, userXp, userStreak, userState, userCountry }: LeaderboardProps) {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<'global' | 'regional' | 'pais'>('global');
@@ -34,9 +35,12 @@ export default function Leaderboard({ userXp, userStreak, userState, userCountry
         throw error;
       }
       
-      // Inject user's live values
+      // Remove a entrada real do usuário logado (se já sincronizada na tabela)
+      // para evitar aparecer duplicado, e injeta seus valores mais atuais no lugar.
+      const otherEntries = (data || []).filter((entry: any) => entry.id !== userId);
+
       const userEntry: LeaderboardEntry = {
-        id: "user",
+        id: userId || "user",
         name: "Você (Estudante)",
         xp: userXp,
         streak: userStreak,
@@ -46,13 +50,13 @@ export default function Leaderboard({ userXp, userStreak, userState, userCountry
         isUser: true
       };
 
-      const combined = [...(data || []), userEntry];
+      const combined = [...otherEntries, userEntry];
       // Sort combined
       combined.sort((a, b) => b.xp - a.xp);
       setEntries(combined);
       setLoading(false);
     } catch (e: any) {
-      console.error("Erro ao buscar o ranking no Supabase:", e);
+      console.warn("Erro ao buscar o ranking no Supabase:", e);
       // Fallback offline mock database to guarantee uninterrupted play
       const fallbackData = [
         { id: "1", name: "Davi", xp: 1240, streak: 45, state: "SP", country: "🇧🇷 Brasil", avatar: "🦊" },
@@ -85,10 +89,25 @@ export default function Leaderboard({ userXp, userStreak, userState, userCountry
 
   useEffect(() => {
     fetchLeaderboard();
-    // Refresh ranking entries every 6 seconds to simulate true active real-time updates!
-    const interval = setInterval(fetchLeaderboard, 6000);
-    return () => clearInterval(interval);
-  }, [userXp, userStreak, userState, userCountry]);
+
+    // Escuta mudanças em tempo real na tabela "leaderboard" via Supabase Realtime.
+    // Sempre que qualquer usuário ganhar XP/ofensiva, todos os apps conectados
+    // recebem a atualização instantaneamente, sem precisar re-buscar manualmente.
+    const channel = supabase
+      .channel('leaderboard-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'leaderboard' },
+        () => {
+          fetchLeaderboard();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, userXp, userStreak, userState, userCountry]);
 
   // Apply filters
   const filteredEntries = entries.filter(entry => {
@@ -115,7 +134,7 @@ export default function Leaderboard({ userXp, userStreak, userState, userCountry
         </div>
 
         {/* Filter buttons */}
-        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <div className="flex flex-wrap sm:flex-nowrap gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 max-w-full justify-center">
           <button
             onClick={() => setFilterType('global')}
             className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black transition-all cursor-pointer ${
