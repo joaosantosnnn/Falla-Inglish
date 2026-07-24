@@ -114,7 +114,7 @@ export default function ArchitectureCenter() {
                   <CheckCircle size={14} /> Pagar.me ou Asaas (Gateway PIX & Cartão)
                 </li>
                 <li className="flex items-center gap-2 text-slate-600 p-2">
-                  <CheckCircle size={14} /> Google Gemini API (Geração inteligente de dúvidas)
+                  <CheckCircle size={14} /> Sistema de apoio às dúvidas
                 </li>
                 <li className="flex items-center gap-2 text-slate-600 p-2">
                   <CheckCircle size={14} /> RevenueCat (Gerenciador de assinaturas in-app)

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "472659246558",
+    "project_id": "falla-dc28d",
+    "storage_bucket": "falla-dc28d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:472659246558:android:9cb76bb616cf056050314f",
+        "android_client_info": {
+          "package_name": "com.falla.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBd16ndLmaDCG1qYVdqRs375KMAdiGp7RU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

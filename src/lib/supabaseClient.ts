@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { Capacitor } from '@capacitor/core';
 
 const supabaseUrl = ((import.meta as any).env?.VITE_SUPABASE_URL as string) || '';
 const supabaseAnonKey = ((import.meta as any).env?.VITE_SUPABASE_ANON_KEY as string) || '';
@@ -13,5 +14,13 @@ if (!isSupabaseConfigured) {
 
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder-url.supabase.co',
-  supabaseAnonKey || 'placeholder-key'
+  supabaseAnonKey || 'placeholder-key',
+  {
+    auth: {
+      flowType: 'pkce',
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: !Capacitor.isNativePlatform(),
+    },
+  }
 );

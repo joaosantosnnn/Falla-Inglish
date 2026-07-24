@@ -1,0 +1,17 @@
+PATCH COMBINADO — LOGIN GOOGLE + DESIGN DA HOME
+
+Este patch preserva o novo layout da Home (banner, temas e os três cards alinhados)
+e mantém a autenticação móvel por deep link.
+
+Copie o conteúdo deste ZIP para a raiz do projeto FALLA e substitua os arquivos.
+Depois execute:
+
+npm install
+npm run build
+npx cap sync android
+cd android
+.\gradlew clean
+cd ..
+npx cap open android
+
+Desinstale o APK antigo antes de instalar a nova compilação.

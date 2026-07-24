@@ -1,7 +1,8 @@
 import React from 'react';
 import { Course, Lesson, UserProgress } from '../types';
 import { motion } from 'motion/react';
-import { Check, Lock, BookOpen, Star, Award, Play } from 'lucide-react';
+import { Check, Lock, Star, Play } from 'lucide-react';
+import ModuleBannerDisplay from './ModuleBannerDisplay';
 
 interface ProgressTrailProps {
   selectedCourse: Course;
@@ -42,14 +43,29 @@ export default function ProgressTrail({
         return (
           <div key={mod.id} className="mb-12 relative z-10">
             {/* Elegant Module/Unit Banner (Duolingo Style) */}
-            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-3xl p-5 shadow-md border-b-4 border-indigo-700 mb-8 transform hover:scale-[1.01] transition-transform">
+            <div 
+              className="text-white rounded-3xl p-5 shadow-md border-b-4 mb-8 transform hover:scale-[1.01] transition-transform"
+              style={{
+                background: 'linear-gradient(135deg, var(--theme-primary), var(--theme-accent))',
+                borderBottomColor: 'var(--theme-primary-dark)'
+              }}
+            >
+              <ModuleBannerDisplay moduleId={mod.id} title={mod.title} />
+              {mod.mascotUrl && (
+                <img
+                  src={mod.mascotUrl}
+                  alt={`Mascote de ${mod.title}`}
+                  className="absolute right-3 top-3 h-16 w-16 rounded-2xl bg-white/85 object-contain p-1 shadow-md"
+                  loading="lazy"
+                />
+              )}
               <span className="bg-white/20 text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full border border-white/15">
                 Módulo {modIdx + 1}
               </span>
               <h3 className="font-black text-sm text-white mt-2 tracking-tight">
                 {mod.title}
               </h3>
-              <p className="text-[10px] text-indigo-100 font-bold mt-1 uppercase tracking-wider">
+              <p className="text-[10px] text-white/90 font-bold mt-1 uppercase tracking-wider">
                 {mod.description}
               </p>
             </div>
@@ -67,6 +83,9 @@ export default function ProgressTrail({
                   const isCompleted = userProgress.completedLessons.includes(les.id);
                   const isUnlocked = isLessonUnlocked(les.id, globalIndex);
                   const isActive = globalIndex === activeLessonIndex;
+                  // Fases antigas concluídas recebem 1 estrela como estado inicial.
+                  // Novas tentativas registram de 0 a 3 conforme a porcentagem de acertos.
+                  const lessonStars = Math.max(0, Math.min(3, userProgress.lessonStars?.[les.id] ?? (isCompleted ? 1 : 0)));
 
                   // Zigzag offsets (sine-like cycle: center, right, center, left)
                   const positionMod = globalIndex % 4;
@@ -84,10 +103,23 @@ export default function ProgressTrail({
                     >
                       {/* Active lesson tooltip/bubble */}
                       {isActive && (
-                        <div className="absolute -top-12 bg-falla-green text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl shadow-md border-b-2 border-green-700 animate-bounce z-20 flex items-center gap-1">
+                        <div 
+                          className="absolute -top-12 text-white text-[10px] font-black uppercase tracking-wider px-3 py-1.5 rounded-xl shadow-md border-b-2 animate-bounce z-20 flex items-center gap-1"
+                          style={{
+                            backgroundColor: 'var(--theme-primary)',
+                            borderBottomColor: 'var(--theme-primary-dark)'
+                          }}
+                        >
                           <Play size={10} fill="currentColor" /> Começar!
                           {/* Triangle arrow */}
-                          <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-falla-green rotate-45 border-r border-b border-green-700" />
+                          <div 
+                            className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45 border-r border-b" 
+                            style={{
+                              backgroundColor: 'var(--theme-primary)',
+                              borderRightColor: 'var(--theme-primary-dark)',
+                              borderBottomColor: 'var(--theme-primary-dark)'
+                            }}
+                          />
                         </div>
                       )}
 
@@ -95,10 +127,20 @@ export default function ProgressTrail({
                       <div className="relative">
                         {/* Pulse effect for current active lesson */}
                         {isActive && (
-                          <div className="absolute -inset-3 bg-falla-green/20 rounded-full animate-ping pointer-events-none" />
+                          <div 
+                            className="absolute -inset-3 rounded-full animate-ping pointer-events-none" 
+                            style={{
+                              backgroundColor: 'var(--theme-primary-light)'
+                            }}
+                          />
                         )}
                         {isActive && (
-                          <div className="absolute -inset-2 rounded-full border-4 border-dashed border-falla-green animate-spin-slow pointer-events-none" />
+                          <div 
+                            className="absolute -inset-2 rounded-full border-4 border-dashed animate-spin-slow pointer-events-none" 
+                            style={{
+                              borderColor: 'var(--theme-primary)'
+                            }}
+                          />
                         )}
 
                         {/* Actual Node Button */}
@@ -109,19 +151,35 @@ export default function ProgressTrail({
                             }
                           }}
                           disabled={!isUnlocked}
-                          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-md relative border-b-6 outline-none ${
-                            isCompleted
-                              ? 'bg-falla-green text-white border-b-green-700 hover:bg-green-500 hover:scale-105 active:scale-95 cursor-pointer'
-                              : isActive
-                              ? 'bg-falla-green text-white border-b-green-700 hover:bg-green-500 hover:scale-110 active:scale-95 cursor-pointer ring-4 ring-green-100'
-                              : isUnlocked
-                              ? 'bg-falla-blue text-white border-b-sky-600 hover:bg-sky-400 hover:scale-105 active:scale-95 cursor-pointer'
-                              : 'bg-slate-200 text-slate-400 border-b-slate-300 cursor-not-allowed'
+                          className={`w-16 h-16 rounded-full flex items-center justify-center transition-all shadow-md relative border-b-6 outline-none hover:scale-105 active:scale-95 ${
+                            isUnlocked ? 'cursor-pointer' : 'cursor-not-allowed'
                           }`}
+                          style={{
+                            backgroundColor: isCompleted
+                              ? 'var(--theme-primary)'
+                              : isActive
+                              ? 'var(--theme-primary)'
+                              : isUnlocked
+                              ? 'var(--theme-accent)'
+                              : 'var(--theme-muted)',
+                            borderBottomColor: isCompleted
+                              ? 'var(--theme-primary-dark)'
+                              : isActive
+                              ? 'var(--theme-primary-dark)'
+                              : isUnlocked
+                              ? 'var(--theme-primary-dark)'
+                              : '#cbd5e1',
+                            boxShadow: isCompleted
+                              ? '0 0 0 5px color-mix(in srgb, var(--theme-primary) 18%, transparent), 0 8px 20px color-mix(in srgb, var(--theme-primary) 30%, transparent)'
+                              : isActive
+                              ? '0 0 0 6px var(--theme-primary-light)'
+                              : undefined,
+                            color: '#ffffff'
+                          }}
                           title={les.title}
                         >
                           {isCompleted ? (
-                            <Check size={24} strokeWidth={3.5} className="animate-pulse" />
+                            <Check size={24} strokeWidth={3.5} />
                           ) : isActive ? (
                             <Star size={24} fill="currentColor" strokeWidth={2.5} className="animate-pulse" />
                           ) : isUnlocked ? (
@@ -141,9 +199,28 @@ export default function ProgressTrail({
                         >
                           {les.title}
                         </p>
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                          {isCompleted ? 'Completa' : isUnlocked ? 'Jogar' : 'Bloqueada'}
-                        </p>
+                        {isCompleted ? (
+                          <div className="mt-1.5 flex items-center justify-center gap-0.5" aria-label={`${lessonStars} de 3 estrelas`}>
+                            {[1, 2, 3].map((starNumber) => (
+                              <Star
+                                key={starNumber}
+                                size={13}
+                                strokeWidth={2.5}
+                                fill={starNumber <= lessonStars ? 'var(--theme-primary)' : 'transparent'}
+                                style={{
+                                  color: starNumber <= lessonStars ? 'var(--theme-primary)' : 'var(--theme-muted)',
+                                  filter: starNumber <= lessonStars
+                                    ? 'drop-shadow(0 0 4px color-mix(in srgb, var(--theme-primary) 55%, transparent))'
+                                    : 'none'
+                                }}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                            {isUnlocked ? 'Jogar' : 'Bloqueada'}
+                          </p>
+                        )}
                       </div>
                     </div>
                   );

@@ -48,7 +48,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       'Acesso às lições básicas de Inglês e Espanhol',
       '5 vidas diárias',
       'Anúncios educativos discretos',
-      'Tutor de IA básico (limite de 3 lições/dia)'
+      'Lições personalizadas (limite de 3 por dia)'
     ],
     color: 'border-slate-200 bg-white'
   },
@@ -61,7 +61,7 @@ export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
       'Tudo do plano gratuito',
       'Vidas infinitas (pratique sem parar!)',
       'Zero anúncios na plataforma',
-      'Tutor de IA ilimitado (gere lições infinitas)',
+      'Lições personalizadas ilimitadas',
       'Acesso prioritário a novos idiomas',
       'Selo exclusivo "Estudante Estelar" no Perfil'
     ],
